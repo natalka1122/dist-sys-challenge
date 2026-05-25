@@ -87,8 +87,7 @@ Set these in your shell rc file (e.g. `~/.bashrc`) before launching the containe
 ```bash
 # Host paths for bind mounts (WSL paths, e.g. /mnt/c/Users/...)
 export HOST_SSH_DIR="/mnt/c/Users/YourName/.ssh"
-export HOST_GH_CONFIG_DIR="$HOME/.config/gh"
-export HOST_PI_AGENT_DIR="$HOME/.pi/agent"
+export HOST_GH_CONFIG_DIR="$HOME/.config/gh_<project-name>"
 
 # Git identity (required by post_start_command.sh)
 export GIT_AUTHOR_EMAIL="your-email@example.com"
@@ -97,6 +96,8 @@ export GIT_AUTHOR_NAME="Your Name"
 # API key for the pi coding agent
 export MY_OPENROUTER_API_KEY="sk-or-v1-..."
 ```
+
+> The PI agent dir is auto-resolved to `${localWorkspaceFolder}/.pi/agent` — no env var needed.
 
 ## Known issues / TODOs
 
