@@ -31,7 +31,8 @@
                 "charliermarsh.ruff",
                 "ryu1kn.partial-diff",
                 "ms-python.mypy-type-checker",
-                "ms-python.flake8"
+                "ms-python.flake8",
+                "GitHub.vscode-github-actions"
             ],
             "settings": {
                 // "[python]": {

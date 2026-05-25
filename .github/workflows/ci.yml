@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.14"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: deadsnakes/action@v3.2.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install mypy pytest pytest-asyncio black wemake-python-styleguide ruff
+
+      - name: Check formatting (black)
+        run: black --check --diff src/
+
+      - name: Lint (ruff)
+        run: ruff check src/
+
+      - name: Type check (mypy)
+        run: mypy src/
+
+
+  maelstrom-echo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: deadsnakes/action@v3.2.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Python packages
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install mypy pytest pytest-asyncio black
+
+      - name: Set up Java 17 (for Maelstrom)
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Install Maelstrom v0.2.4
+        run: |
+          sudo mkdir -p /opt/maelstrom
+          sudo curl -fL -o /tmp/maelstrom.tar.bz2 \
+            https://github.com/jepsen-io/maelstrom/releases/download/v0.2.4/maelstrom.tar.bz2
+          sudo tar -xjf /tmp/maelstrom.tar.bz2 -C /opt/maelstrom --strip-components=1
+          sudo rm /tmp/maelstrom.tar.bz2
+          echo "/opt/maelstrom" >> "$GITHUB_PATH"
+
+      - name: Run Maelstrom echo test
+        run: |
+          maelstrom test \
+            -w echo \
+            --bin "src/main.py" \
+            --node-count 1 \
+            --time-limit 10 \
+            --rate 1 \
+            --log-stderr
+        working-directory: ${{ github.workspace }}
