@@ -42,6 +42,3 @@ results/
 # Jupyter notebooks (raw data)
 notebooks/*.csv
 notebooks/*.json
-
-# Pi Agent
-.pi/agent
