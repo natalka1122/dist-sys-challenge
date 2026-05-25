@@ -32,7 +32,7 @@ jobs:
         run: ruff check src/
 
       - name: Type check (mypy)
-        run: mypy -p src
+        run: mypy src/ --explicit-package-bases
 
 
   maelstrom-echo:
