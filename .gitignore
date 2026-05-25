@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Logs
+logs/
+
+# Mypy cache
+.mypy_cache/
+
+# IDE / editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Maelstrom output (if run locally)
+store/
+results/
+
+# Pi coding agent (credentials, sessions, skills)
+.pi/
+
+# Environment files
+.env
+.env.local
+
+# Jupyter notebooks (raw data)
+notebooks/*.csv
+notebooks/*.json
+
+# Pi Agent
+.pi/agent

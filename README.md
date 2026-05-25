@@ -1,0 +1,90 @@
+# Distributed Systems Challenge in Python
+
+Solutions to the [Fly.io Distributed Systems Challenge](https://fly.io/dist-sys/) (a.k.a. "Gossip Glomers"), implemented in **Python 3.14 / asyncio**.
+
+## Status
+
+Currently working through **Challenge #1: Echo** ([spec](https://fly.io/dist-sys/1/)).
+
+| Challenge | Status |
+|-----------|--------|
+| [#1 — Echo](https://fly.io/dist-sys/1/) | 🚧 In progress |
+| [#2 — Unique ID Generation](https://fly.io/dist-sys/2/) | ⏳ Not started |
+| [#3 — Broadcast](https://fly.io/dist-sys/3/) | ⏳ Not started |
+| [#4 — Grow-Only Counter](https://fly.io/dist-sys/4/) | ⏳ Not started |
+| [#5 — Kafka-Style Log](https://fly.io/dist-sys/5/) | ⏳ Not started |
+| [#6 — Totally-Available Transactions](https://fly.io/dist-sys/6/) | ⏳ Not started |
+
+## What is this?
+
+[Gossip Glomers](https://fly.io/dist-sys/) is a series of distributed systems challenges created by [Kyle Kingsbury](https://aphyr.com/) (author of Jepsen). Participants build a node that communicates over **stdin/stdout** using [Maelstrom](https://github.com/jepsen-io/maelstrom), a Jepsen-based test harness. Each challenge introduces a new distributed systems concept — RPC, broadcast, fault tolerance, linearizability, etc.
+
+The test harness sends JSON messages to the node's stdin, and the node replies on stdout. The harness then verifies correctness properties (e.g. "all nodes eventually receive the message").
+
+## Stack
+
+- **Language:** Python 3.14
+- **Async runtime:** `asyncio` (stdin/stdout streams)
+- **Type checking:** mypy (`--strict`)
+- **Linting:** flake8 + wemake-python-styleguide
+- **Dev container:** Ubuntu 24.04 with Maelstrom v0.2.4 pre-installed
+
+## Project structure
+
+```
+├── src/
+│   ├── __init__.py         # Package marker
+│   ├── main.py             # Entry point — signal handling, asyncio runner
+│   ├── maelstrom_app.py    # Core loop: stdin reader, processor, stdout writer
+│   ├── message.py          # Message model (JSON deserialization)
+│   ├── const.py            # Message type enum
+│   ├── exceptions.py       # Custom exceptions
+│   └── logging_config.py   # Logging setup (console + rotating file)
+├── .devcontainer/          # Dev container config + Maelstrom install
+├── pyproject.toml          # Python project metadata
+├── .flake8                 # Flake8 configuration
+├── .gitignore
+└── README.md
+```
+
+All source code lives under `src/`. Run via:
+
+```bash
+python3 src/main.py
+```
+
+## Running
+
+### Inside the dev container (recommended)
+
+```bash
+# Build & launch the dev container (VS Code: Reopen in Container)
+# Then run the node against Maelstrom:
+cd /workspaces/dist-sys-challenge
+echo '{"src":"c0","dest":"n1","body":{"type":"echo","msg_id":1,"echo":"hello"}}' | python3 src/main.py
+```
+
+### With Maelstrom (full test suite)
+
+```bash
+cd /workspaces/dist-sys-challenge
+maelstrom test \
+  --bin "python3 src/main.py" \
+  --node-count 1 \
+  --time-limit 10 \
+  --rate 1 \
+  --latency 10 \
+  --log-stderr
+```
+
+> ⚠️ Tests require Maelstrom (included in the dev container). For manual install see [maelstrom/releases](https://github.com/jepsen-io/maelstrom/releases).
+
+## Known issues / TODOs
+
+- `message.py` references an undefined `Body` type — the class was commented out and needs rework
+- Only stdin/stdout plumbing is wired; the echo handler logic is not yet implemented
+- No unit tests yet
+
+## License
+
+MIT
