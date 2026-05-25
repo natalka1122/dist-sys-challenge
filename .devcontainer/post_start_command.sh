@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-git config --global user.email "natalka1122@gmail.com"
-git config --global user.name "natalka1122"
+git config --global user.email "${GIT_AUTHOR_EMAIL:?set GIT_AUTHOR_EMAIL in local env}"
+git config --global user.name "${GIT_AUTHOR_NAME:?set GIT_AUTHOR_NAME in local env}"
 
 # Fix SSH permissions
 sudo chown -R vscode:vscode ~/.ssh || true

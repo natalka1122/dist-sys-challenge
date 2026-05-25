@@ -79,6 +79,25 @@ maelstrom test \
 
 > ⚠️ Tests require Maelstrom (included in the dev container). For manual install see [maelstrom/releases](https://github.com/jepsen-io/maelstrom/releases).
 
+## Dev container setup
+
+The `.devcontainer/` mounts several host paths into the container via `localEnv` variables.
+Set these in your shell rc file (e.g. `~/.bashrc`) before launching the container:
+
+```bash
+# Host paths for bind mounts (WSL paths, e.g. /mnt/c/Users/...)
+export HOST_SSH_DIR="/mnt/c/Users/YourName/.ssh"
+export HOST_GH_CONFIG_DIR="$HOME/.config/gh"
+export HOST_PI_AGENT_DIR="$HOME/.pi/agent"
+
+# Git identity (required by post_start_command.sh)
+export GIT_AUTHOR_EMAIL="your-email@example.com"
+export GIT_AUTHOR_NAME="Your Name"
+
+# API key for the pi coding agent
+export MY_OPENROUTER_API_KEY="sk-or-v1-..."
+```
+
 ## Known issues / TODOs
 
 - `message.py` references an undefined `Body` type — the class was commented out and needs rework
