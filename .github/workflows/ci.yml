@@ -56,6 +56,9 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
+      - name: Install gnuplot (Maelstrom needs it for plots)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq gnuplot
+
       - name: Install Maelstrom v0.2.4
         run: |
           sudo mkdir -p /opt/maelstrom
