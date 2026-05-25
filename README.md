@@ -69,11 +69,11 @@ echo '{"src":"c0","dest":"n1","body":{"type":"echo","msg_id":1,"echo":"hello"}}'
 ```bash
 cd /workspaces/dist-sys-challenge
 maelstrom test \
-  --bin "python3 src/main.py" \
+  -w echo \
+  --bin "src/main.py" \
   --node-count 1 \
   --time-limit 10 \
   --rate 1 \
-  --latency 10 \
   --log-stderr
 ```
 
@@ -99,11 +99,9 @@ export MY_OPENROUTER_API_KEY="sk-or-v1-..."
 
 > The PI agent dir is auto-resolved to `${localWorkspaceFolder}/.pi/agent` — no env var needed.
 
-## Known issues / TODOs
+## Tests
 
-- `message.py` references an undefined `Body` type — the class was commented out and needs rework
-- Only stdin/stdout plumbing is wired; the echo handler logic is not yet implemented
-- No unit tests yet
+There are currently **no unit tests**. The project is tested end-to-end via Maelstrom's test harness (see [Running](#running)). Adding tests is a known gap.
 
 ## License
 

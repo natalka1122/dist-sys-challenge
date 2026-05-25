@@ -31,7 +31,4 @@ RUN pi update && \
     pi install npm:pi-subagents && \
     pi install npm:pi-mcp-adapter
 
-ARG MY_OPENROUTER_API_KEY
-ENV MY_OPENROUTER_API_KEY=${MY_OPENROUTER_API_KEY}
-
 EXPOSE 8080

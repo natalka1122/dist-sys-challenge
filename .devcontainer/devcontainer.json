@@ -1,14 +1,10 @@
 {
     "build": {
-        "dockerfile": "Dockerfile",
-        "context": "..",
-        "args": {
-            "MY_OPENROUTER_API_KEY": "${localEnv:MY_OPENROUTER_API_KEY}"
-        }
+        "dockerfile": "Dockerfile"
     },
     "mounts": [
-        "source=${localEnv:HOST_SSH_DIR},target=/home/vscode/.ssh,type=bind,consistency=cached",
-        "source=${localEnv:HOST_GH_CONFIG_DIR},target=/home/vscode/.config/gh,type=bind,consistency=cached",
+        "source=${localEnv:GITHUB_SSH_DIR},target=/home/vscode/.ssh,type=bind,consistency=cached",
+        "source=${localEnv:HOME}/.config/gh_dist_sys_challenge,target=/home/vscode/.config/gh,type=bind,consistency=cached",
         "source=${localWorkspaceFolder}/.pi/agent,target=/home/vscode/.pi/agent,type=bind,consistency=cached"
     ],
     "remoteEnv": {

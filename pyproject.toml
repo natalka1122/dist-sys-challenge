@@ -13,9 +13,7 @@ authors = [
   {name = "natalka1122"},
 ]
 
-dependencies = [
-    "pydantic>=2.0",
-]
+dependencies = []
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -31,6 +29,7 @@ python_version = "3.14"
 strict = true
 check_untyped_defs = true
 follow_untyped_imports = true
+mypy_path = ["src"]
 exclude = [".mypy_cache/"]
 
 [tool.ruff]

@@ -33,8 +33,8 @@ def setup_logging(
     level: str = DEFAULT_LOG_LEVEL,
     log_file: Optional[str] = None,
     log_dir: str = DEFAULT_LOG_DIR,
-) -> logging.Logger:
-    log_level = getattr(logging, level.upper())
+) -> None:
+    log_level: int = getattr(logging, level.upper())
 
     # Create root logger
     logger = logging.getLogger()
@@ -51,19 +51,15 @@ def setup_logging(
     # Reduce noise from common libraries
     logging.getLogger("asyncio").setLevel(logging.WARNING)
 
-    return logger
-
 
 def get_logger(name: str) -> logging.Logger:
     """Get a logger instance for a specific module/component."""
     return logging.getLogger(name)
 
 
-def create_console_handler(
-    level: str = DEFAULT_LOG_LEVEL,
-) -> logging.StreamHandler[TextIO]:
+def create_console_handler(level: int) -> logging.StreamHandler[TextIO]:
     # Console handler
-    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler = logging.StreamHandler(sys.stderr)
     console_handler.setLevel(level)
     console_handler.setFormatter(
         logging.Formatter(
@@ -79,9 +75,9 @@ def create_console_handler(
 
 
 def create_file_handler(
+    level: int,
     log_dir: str = DEFAULT_LOG_DIR,
     log_file: Optional[str] = None,
-    level: str = DEFAULT_LOG_LEVEL,
     max_file_size: int = MAX_LOG_FILE_SIZE,
     backup_count: int = 5,
 ) -> RotatingFileHandler:
