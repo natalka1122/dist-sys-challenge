@@ -35,7 +35,7 @@ The test harness sends JSON messages to the node's stdin, and the node replies o
 ├── src/
 │   ├── __init__.py         # Package marker
 │   ├── main.py             # Entry point — signal handling, asyncio runner
-│   ├── maelstrom_app.py    # Core loop: stdin reader, processor, stdout writer
+│   ├── gossip_gloomers_app.py    # Core loop: stdin reader, processor, stdout writer
 │   ├── message.py          # Message model (JSON deserialization)
 │   ├── const.py            # Message type enum
 │   ├── exceptions.py       # Custom exceptions

@@ -92,7 +92,7 @@ async def processor(
     logger.info("Stopped processor")
 
 
-async def maelstrom_app(
+async def gossip_gloomers_app(
     shutdown_event: asyncio.Event,
 ) -> None:
     reader, writer = await connect_stdin_stdout()

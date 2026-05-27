@@ -6,7 +6,7 @@ import sys
 from functools import partial
 
 from logging_config import get_logger, setup_logging
-from maelstrom_app import maelstrom_app
+from gossip_gloomers_app import gossip_gloomers_app
 
 logger = get_logger(__name__)
 
@@ -31,7 +31,7 @@ async def main() -> None:
     shutdown_event = asyncio.Event()
     setup_signal_handlers(shutdown_event)
     setup_logging(level="DEBUG", log_dir="logs")
-    await maelstrom_app(
+    await gossip_gloomers_app(
         shutdown_event=shutdown_event,
     )
 

@@ -22,8 +22,8 @@ Each challenge builds a node process that reads JSON messages from **stdin** and
 
 | File | Role |
 |---|---|
-| `src/main.py` | Entry point. Sets up signal handlers (SIGINT/SIGTERM → shutdown_event), configures logging, launches `maelstrom_app`. |
-| `src/maelstrom_app.py` | Core loop. Three asyncio tasks: `read_json` (stdin → queue), `processor` (queue → reply), `write_json` (queue → stdout). |
+| `src/main.py` | Entry point. Sets up signal handlers (SIGINT/SIGTERM → shutdown_event), configures logging, launches `gossip_gloomers_app`. |
+| `src/gossip_gloomers_app.py` | Core loop. Three asyncio tasks: `read_json` (stdin → queue), `processor` (queue → reply), `write_json` (queue → stdout). |
 | `src/message.py` | Message model. Dataclasses for all body types (`EchoBody`, `EchoOkBody`, `InitBody`, `InitOkBody`, `ErrorBody`) plus `Message` wrapper with JSON serialization. |
 | `src/const.py` | Enums: `MessageType` and `ErrorType` (Maelstrom error codes). |
 | `src/exceptions.py` | `NeedMoreBytesError` and `BadMessageError`. |
