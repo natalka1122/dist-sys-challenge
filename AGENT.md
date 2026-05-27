@@ -1,5 +1,7 @@
 # Distributed Systems Challenge — Agent Context
 
+> **Learning project**: The human is writing the code. Do not give too much information unless asked specifically. Keep responses concise and focused on what was asked.
+
 ## Project overview
 
 Solutions to the [Fly.io Distributed Systems Challenge](https://fly.io/dist-sys/) (Gossip Glomers), implemented in **Python 3.14 / asyncio**.
