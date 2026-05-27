@@ -1,126 +1,181 @@
 import json
-from dataclasses import dataclass
-from typing import Any
+from abc import abstractmethod
+from dataclasses import asdict, dataclass
+from typing import Any, cast
 
 from const import ErrorType, MessageType
-from exceptions import BadMessageError, NeedMoreBytesError
+from exceptions import BadMessageError
 from logging_config import get_logger
 
 logger = get_logger(__name__)
 
-
-def _get_msg_id(raw_json: dict[Any, Any]) -> int:
-    msg_id = raw_json.get("msg_id")
-    if not isinstance(msg_id, int):
-        raise BadMessageError(f"raw_json = {raw_json} msg_id = {msg_id}")
-    return msg_id
+DictWithStrKeys = dict[str, Any]
 
 
-@dataclass
+def _get_str(raw_json: dict[Any, Any], key: str) -> str:
+    result = raw_json.get(key)
+    if not isinstance(result, str):
+        raise BadMessageError(f"Wrong {key} = {type(result)} {result} raw_json = {raw_json}")
+    return result
+
+
+def _get_int_or_none(raw_json: dict[Any, Any], key: str) -> int | None:
+    result = raw_json.get(key)
+    if result is not None and not isinstance(result, int):
+        raise BadMessageError(f"Wrong {key} = {type(result)} {result} raw_json = {raw_json}")
+    return result
+
+
+def _get_int(raw_json: dict[Any, Any], key: str) -> int:
+    result = raw_json.get(key)
+    if not isinstance(result, int):
+        raise BadMessageError(f"Wrong {key} = {type(result)} {result} raw_json = {raw_json}")
+    return result
+
+
+def _get_dict_with_str_keys(raw_json: dict[Any, Any], key: str) -> DictWithStrKeys:
+    result = raw_json.get(key)
+    if not isinstance(result, dict):
+        raise BadMessageError(f"Wrong {key} = {type(result)} {result} result = {raw_json}")
+    result = cast(DictWithStrKeys, result)
+    if not all(isinstance(k, str) for k in result):  # pyright: ignore[reportUnnecessaryIsInstance]
+        raise BadMessageError(f"Wrong {key} = {type(result)} {result} result = {raw_json}")
+    return result
+
+
+@dataclass(kw_only=True, frozen=True)
 class Body:
     type: MessageType
 
-    def to_json(self) -> dict[str, Any]:
-        return {"type": self.type}
+    def to_json(self) -> DictWithStrKeys:
+        result: DictWithStrKeys = {"type": self.type.value}
+        for key, value in asdict(self).items():
+            if key != "type":
+                result[key] = value
+        return result
 
     @classmethod
-    def from_json(cls, raw_json: dict[Any, Any]) -> "Body":
-        body_type = raw_json.get("type")
-        if body_type == MessageType.ECHO:
-            return EchoBody(msg_id=_get_msg_id(raw_json), echo=raw_json.get("echo", ""))
-        elif body_type == MessageType.INIT:
-            return InitBody(msg_id=_get_msg_id(raw_json))
-        return ErrorBody(
-            code=ErrorType.NOT_SUPPORTED,
-            in_reply_to=raw_json.get("msg_id", 0),
-            text=f"Unknown body_type = {body_type} raw_json = {raw_json}",
-        )
+    @abstractmethod
+    def from_json(cls, body_json: dict[Any, Any]) -> "Body": ...
 
 
-@dataclass(kw_only=True)
-class EchoBody(Body):
-    msg_id: int
-    echo: str
-    type: MessageType = MessageType.ECHO
-
-    def to_json(self) -> dict[str, Any]:
-        result = super().to_json()
-        result["msg_id"] = self.msg_id
-        result["echo"] = self.echo
-        return result
-
-
-@dataclass(kw_only=True)
-class EchoOkBody(Body):
-    msg_id: int
-    echo: str
-    in_reply_to: int
-    type: MessageType = MessageType.ECHO_OK
-
-    def to_json(self) -> dict[str, Any]:
-        result = super().to_json()
-        result["msg_id"] = self.msg_id
-        result["echo"] = self.echo
-        result["in_reply_to"] = self.in_reply_to
-        return result
-
-
-@dataclass(kw_only=True)
-class InitBody(Body):
-    msg_id: int
+@dataclass(kw_only=True, frozen=True)
+class BodyInit(Body):
     type: MessageType = MessageType.INIT
+    node_id: str
+    node_ids: list[str]
 
-    def to_json(self) -> dict[str, Any]:
-        result = super().to_json()
-        result["msg_id"] = self.msg_id
-        return result
+    @classmethod
+    def from_json(cls, body_json: dict[Any, Any]) -> BodyInit:
+        node_id = body_json.get("node_id")
+        if not isinstance(node_id, str):
+            raise BadMessageError(
+                f"Bad node_id = {type(node_id)} {node_id} body_json = {body_json}"
+            )
+        node_ids = body_json.get("node_ids")
+        if not isinstance(node_ids, list):
+            raise BadMessageError(
+                f"Bad node_ids = {type(node_ids)} {node_ids} body_json = {body_json}"
+            )
+        node_ids = cast(list[str], node_ids)
+        if not all(isinstance(k, str) for k in node_ids):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise BadMessageError(f"Wrong node_ids = {node_ids} body_json = {body_json}")
+        return BodyInit(node_id=node_id, node_ids=node_ids)
 
 
-@dataclass(kw_only=True)
-class InitOkBody(Body):
-    in_reply_to: int
+@dataclass(kw_only=True, frozen=True)
+class BodyInitOk(Body):
     type: MessageType = MessageType.INIT_OK
 
-    def to_json(self) -> dict[str, Any]:
-        result = super().to_json()
-        result["in_reply_to"] = self.in_reply_to
-        return result
+    @classmethod
+    def from_json(cls, body_json: dict[Any, Any]) -> BodyInitOk:
+        return BodyInitOk()
+
+
+@dataclass(kw_only=True, frozen=True)
+class BodyEcho(Body):
+    type: MessageType = MessageType.ECHO
+    echo: str
+
+    @classmethod
+    def from_json(cls, body_json: dict[Any, Any]) -> BodyEcho:
+        echo = body_json.get("echo")
+        if not isinstance(echo, str):
+            raise BadMessageError(f"Bad echo = {type(echo)} {echo} body_json = {body_json}")
+        return BodyEcho(echo=echo)
+
+
+@dataclass(kw_only=True, frozen=True)
+class BodyEchoOk(Body):
+    type: MessageType = MessageType.ECHO_OK
+    echo: str
+
+    @classmethod
+    def from_json(cls, body_json: dict[Any, Any]) -> BodyEchoOk:
+        echo = body_json.get("echo")
+        if not isinstance(echo, str):
+            raise BadMessageError(f"Bad echo = {type(echo)} {echo} body_json = {body_json}")
+        return BodyEchoOk(echo=echo)
+
+
+@dataclass(kw_only=True, frozen=True)
+class BodyError(Body):
+    type: MessageType = MessageType.ERROR
+    text: str
+    code: ErrorType
+
+    @classmethod
+    def from_json(cls, body_json: dict[Any, Any]) -> BodyError:
+        text = _get_str(body_json, "text")
+        code = ErrorType(_get_int(body_json, "code"))
+        return BodyError(text=text, code=code)
 
 
 @dataclass(kw_only=True)
-class ErrorBody(Body):
-    in_reply_to: int
-    text: str
-    code: ErrorType
-    type: MessageType = MessageType.ERROR
-
-    def to_json(self) -> dict[str, Any]:
-        result = super().to_json()
-        result["in_reply_to"] = self.in_reply_to
-        result["code"] = self.code
-        result["text"] = self.text
-        return result
-
-
-@dataclass
 class Message:
     src: str
     dest: str
     body: Body
+    msg_id: int | None = None
+    in_reply_to: int | None = None
 
-    def to_bytes(self) -> bytes:
-        result: dict[str, Any] = {"src": self.src, "dest": self.dest, "body": self.body.to_json()}
-        return json.dumps(result).encode()
+    def to_json(self) -> dict[str, Any]:
+        result: dict[str, Any] = {"src": self.src, "dest": self.dest}
+        body: dict[str, Any] = self.body.to_json()
+        if self.msg_id is not None:
+            body["msg_id"] = self.msg_id
+        if self.in_reply_to is not None:
+            body["in_reply_to"] = self.in_reply_to
+        result["body"] = body
+        return result
 
     @classmethod
-    def from_bytes(cls, raw_bytes: bytes) -> "Message":
+    def from_bytes(cls, raw_bytes: bytes) -> Message:
         try:
             raw_json = json.loads(raw_bytes)
         except json.JSONDecodeError:
-            raise NeedMoreBytesError
-        src = raw_json.get("src")
-        dest = raw_json.get("dest")
-        body = raw_json.get("body")
-        if not isinstance(src, str) or not isinstance(dest, str) or not isinstance(body, dict):
-            raise BadMessageError
-        return Message(src=src, dest=dest, body=Body.from_json(body))
+            raise BadMessageError(f"Malformed raw_bytes = {raw_bytes!r}")
+        src = _get_str(raw_json, "src")
+        dest = _get_str(raw_json, "dest")
+        body_json: DictWithStrKeys = _get_dict_with_str_keys(raw_json, "body")
+        body_type_str = _get_str(body_json, "type")
+        msg_id = _get_int_or_none(body_json, "msg_id")
+        in_reply_to = _get_int_or_none(body_json, "in_reply_to")
+
+        body: Body
+        match body_type_str:
+            case MessageType.ECHO.value:
+                body = BodyEcho.from_json(body_json)
+            case MessageType.ECHO_OK.value:
+                body = BodyEchoOk.from_json(body_json)
+            case MessageType.INIT.value:
+                body = BodyInit.from_json(body_json)
+            case MessageType.INIT_OK.value:
+                body = BodyInitOk.from_json(body_json)
+            case MessageType.ERROR.value:
+                body = BodyError.from_json(body_json)
+            case _:
+                raise BadMessageError(
+                    f"Not implemented: body_type_str = {body_type_str} raw_json = {raw_json}"
+                )
+        return Message(src=src, dest=dest, msg_id=msg_id, body=body, in_reply_to=in_reply_to)

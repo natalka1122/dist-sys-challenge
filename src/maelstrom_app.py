@@ -1,17 +1,15 @@
 import asyncio
+import json
 import sys
 
-from const import ErrorType
-from exceptions import NeedMoreBytesError
+from exceptions import BadMessageError
 from logging_config import get_logger
-from message import Body, EchoBody, EchoOkBody, ErrorBody, InitBody, InitOkBody, Message
+from message import BodyEcho, BodyEchoOk, BodyInit, BodyInitOk, Message
 
 logger = get_logger(__name__)
 
 
-async def connect_stdin_stdout() -> (
-    tuple[asyncio.StreamReader, asyncio.StreamWriter]
-):  # noqa: WPS210
+async def connect_stdin_stdout() -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:  # noqa: WPS210
     loop = asyncio.get_running_loop()
     reader = asyncio.StreamReader()
     protocol = asyncio.StreamReaderProtocol(reader)
@@ -26,33 +24,29 @@ async def connect_stdin_stdout() -> (
 async def read_json(
     reader: asyncio.StreamReader,
     read_queue: asyncio.Queue[Message],
+    shutdown_event: asyncio.Event,
     shutdown_task: asyncio.Task[bool],
 ) -> None:
-    buffer = b""
     while not shutdown_task.done():
         read_task = asyncio.create_task(reader.readline())
         await asyncio.wait([shutdown_task, read_task], return_when=asyncio.FIRST_COMPLETED)
         if read_task.done():
-            buffer += read_task.result()
-            logger.info(f"read_task = {read_task}")
-            logger.info(f"buffer = {buffer!r}")
+            result = read_task.result()
             try:
-                message = Message.from_bytes(buffer)
-            except NeedMoreBytesError:
-                logger.debug(f"Got {buffer!r}, waiting for more")
-                continue
-            logger.debug(f"HI buffer = {buffer!r} message = {message}")
-            await read_queue.put(message)
-            logger.info(f"message = {message}")
-            buffer = b""
+                message = Message.from_bytes(result)
+            except BadMessageError as exc:
+                logger.error(f"Got {result!r}, bad message, {exc}")
+                shutdown_event.set()
+            else:
+                logger.debug(f"message = {message.to_json()}")
+                await read_queue.put(message)
     logger.info("Stopped read_json")
-    if buffer:
-        logger.warning(f"Buffer is not empty buffer = {buffer!r}")
 
 
 async def write_json(
     writer: asyncio.StreamWriter,
     write_queue: asyncio.Queue[Message],
+    shutdown_event: asyncio.Event,
     shutdown_task: asyncio.Task[bool],
 ) -> None:
     while not shutdown_task.done():
@@ -60,7 +54,7 @@ async def write_json(
         await asyncio.wait([shutdown_task, next_item_task], return_when=asyncio.FIRST_COMPLETED)
         if next_item_task.done():
             next_item = next_item_task.result()
-            next_item_bytes = next_item.to_bytes()
+            next_item_bytes = json.dumps(next_item.to_json()).encode()
             writer.write(next_item_bytes)
             writer.write(b"\n")
             writer_drain_task = asyncio.create_task(writer.drain())
@@ -74,6 +68,7 @@ async def write_json(
 async def processor(
     read_queue: asyncio.Queue[Message],
     write_queue: asyncio.Queue[Message],
+    shutdown_event: asyncio.Event,
     shutdown_task: asyncio.Task[bool],
 ) -> None:
     while not shutdown_task.done():
@@ -81,28 +76,17 @@ async def processor(
         await asyncio.wait([shutdown_task, read_task], return_when=asyncio.FIRST_COMPLETED)
         if read_task.done():
             read_data = read_task.result()
-            body: Body
-            if isinstance(read_data.body, EchoBody):
-                body = EchoOkBody(
-                    msg_id=read_data.body.msg_id,
-                    in_reply_to=read_data.body.msg_id,
-                    echo=read_data.body.echo,
-                )
-            elif isinstance(read_data.body, InitBody):
-                body = InitOkBody(
-                    in_reply_to=read_data.body.msg_id,
-                )
+            body = read_data.body
+            if isinstance(body, BodyEcho):
+                body = BodyEchoOk(echo=body.echo)
+            elif isinstance(body, BodyInit):
+                body = BodyInitOk()
             else:
-                try:
-                    msg_id = getattr(read_data.body, "msg_id")
-                except AttributeError:
-                    msg_id = 0
-                body = ErrorBody(
-                    in_reply_to=msg_id,
-                    code=ErrorType.NOT_SUPPORTED,
-                    text=f"Unknown requested operation. read_data = {read_data}",
-                )
-            message = Message(src=read_data.dest, dest=read_data.src, body=body)
+                shutdown_event.set()
+                break
+            message = Message(
+                src=read_data.dest, dest=read_data.src, body=body, in_reply_to=read_data.msg_id
+            )
             await write_queue.put(message)
             logger.info(f"processed {read_data} => {message}")
     logger.info("Stopped processor")
@@ -116,12 +100,29 @@ async def maelstrom_app(
     write_queue: asyncio.Queue[Message] = asyncio.Queue()
     shutdown_task: asyncio.Task[bool] = asyncio.create_task(shutdown_event.wait())
     tasks: list[asyncio.Task[None]] = [
-        asyncio.create_task(read_json(reader, read_queue=read_queue, shutdown_task=shutdown_task)),
         asyncio.create_task(
-            write_json(writer, write_queue=write_queue, shutdown_task=shutdown_task)
+            read_json(
+                reader,
+                read_queue=read_queue,
+                shutdown_event=shutdown_event,
+                shutdown_task=shutdown_task,
+            )
         ),
         asyncio.create_task(
-            processor(read_queue=read_queue, write_queue=write_queue, shutdown_task=shutdown_task)
+            write_json(
+                writer,
+                write_queue=write_queue,
+                shutdown_event=shutdown_event,
+                shutdown_task=shutdown_task,
+            )
+        ),
+        asyncio.create_task(
+            processor(
+                read_queue=read_queue,
+                write_queue=write_queue,
+                shutdown_event=shutdown_event,
+                shutdown_task=shutdown_task,
+            )
         ),
     ]
     logger.info("Everybody started")
