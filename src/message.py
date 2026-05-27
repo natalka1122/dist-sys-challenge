@@ -143,11 +143,11 @@ class BodyGenerate(Body):
 @dataclass(kw_only=True, frozen=True)
 class BodyGenerateOk(Body):
     type: MessageType = MessageType.GENERATE_OK
-    id: int
+    id: str
 
     @classmethod
     def from_json(cls, body_json: dict[Any, Any]) -> BodyGenerateOk:
-        generated_id = _get_int(body_json, "id")
+        generated_id = _get_str(body_json, "id")
         return BodyGenerateOk(id=generated_id)
 
 

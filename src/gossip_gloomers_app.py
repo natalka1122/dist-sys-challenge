@@ -3,6 +3,7 @@ import json
 import sys
 
 from exceptions import BadMessageError
+from ggstate import GGState
 from logging_config import get_logger
 from message import (
     BodyEcho,
@@ -54,6 +55,7 @@ async def read_json(
 async def write_json(
     writer: asyncio.StreamWriter,
     write_queue: asyncio.Queue[Message],
+    gg_state: GGState,
     shutdown_event: asyncio.Event,
     shutdown_task: asyncio.Task[bool],
 ) -> None:
@@ -62,6 +64,7 @@ async def write_json(
         await asyncio.wait([shutdown_task, next_item_task], return_when=asyncio.FIRST_COMPLETED)
         if next_item_task.done():
             next_item = next_item_task.result()
+            next_item.msg_id = gg_state.next_msg_id
             next_item_bytes = json.dumps(next_item.to_json()).encode()
             writer.write(next_item_bytes)
             writer.write(b"\n")
@@ -76,6 +79,7 @@ async def write_json(
 async def processor(
     read_queue: asyncio.Queue[Message],
     write_queue: asyncio.Queue[Message],
+    gg_state: GGState,
     shutdown_event: asyncio.Event,
     shutdown_task: asyncio.Task[bool],
 ) -> None:
@@ -88,10 +92,17 @@ async def processor(
             if isinstance(body, BodyEcho):
                 body = BodyEchoOk(echo=body.echo)
             elif isinstance(body, BodyInit):
+                if gg_state.node_id is not None:
+                    logger.error(f"Got init but already have node_id. body = {body}")
+                    shutdown_event.set()
+                    break
+                gg_state.node_id = body.node_id
+                gg_state.node_ids = set(body.node_ids)
                 body = BodyInitOk()
             elif isinstance(body, BodyGenerate):
-                body = BodyGenerateOk(id=1)
+                body = BodyGenerateOk(id=gg_state.next_generate_id)
             else:
+                logger.error(f"Got unknown body = {body}")
                 shutdown_event.set()
                 break
             message = Message(
@@ -105,6 +116,7 @@ async def processor(
 async def gossip_gloomers_app(
     shutdown_event: asyncio.Event,
 ) -> None:
+    gg_state = GGState()
     reader, writer = await connect_stdin_stdout()
     read_queue: asyncio.Queue[Message] = asyncio.Queue()
     write_queue: asyncio.Queue[Message] = asyncio.Queue()
@@ -122,6 +134,7 @@ async def gossip_gloomers_app(
             write_json(
                 writer,
                 write_queue=write_queue,
+                gg_state=gg_state,
                 shutdown_event=shutdown_event,
                 shutdown_task=shutdown_task,
             )
@@ -130,6 +143,7 @@ async def gossip_gloomers_app(
             processor(
                 read_queue=read_queue,
                 write_queue=write_queue,
+                gg_state=gg_state,
                 shutdown_event=shutdown_event,
                 shutdown_task=shutdown_task,
             )
