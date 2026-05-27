@@ -7,12 +7,12 @@ Solutions to the [Fly.io Distributed Systems Challenge](https://fly.io/dist-sys/
 Currently working through **Challenge #2: Unique ID Generation** ([spec](https://fly.io/dist-sys/2/)).
 
 - ✅ **Challenge #1 — Echo**: Completed and passing.
-- 🚧 **Challenge #2 — Unique ID Generation**: In progress (stub handler returns `id=1`).
+- 🚧 **Challenge #2 — Unique ID Generation**: Implemented (unique IDs via `{node_id}_{counter}`). CI pipeline has formatting issues to fix first.
 
 | Challenge | Status |
 |-----------|--------|
 | [#1 — Echo](https://fly.io/dist-sys/1/) | ✅ Done |
-| [#2 — Unique ID Generation](https://fly.io/dist-sys/2/) | 🚧 In progress |
+| [#2 — Unique ID Generation](https://fly.io/dist-sys/2/) | 🚧 Implemented, waiting on CI |
 | [#3 — Broadcast](https://fly.io/dist-sys/3/) | ⏳ Not started |
 | [#4 — Grow-Only Counter](https://fly.io/dist-sys/4/) | ⏳ Not started |
 | [#5 — Kafka-Style Log](https://fly.io/dist-sys/5/) | ⏳ Not started |
@@ -39,6 +39,7 @@ The test harness sends JSON messages to the node's stdin, and the node replies o
 │   ├── __init__.py         # Package marker
 │   ├── main.py             # Entry point — signal handling, asyncio runner
 │   ├── gossip_gloomers_app.py    # Core loop: stdin reader, processor, stdout writer
+│   ├── ggstate.py          # Shared node state (node_id, counters, generation)
 │   ├── message.py          # Message model (JSON deserialization)
 │   ├── const.py            # Message type enum
 │   ├── exceptions.py       # Custom exceptions
