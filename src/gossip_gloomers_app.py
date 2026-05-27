@@ -4,14 +4,20 @@ import sys
 
 from exceptions import BadMessageError
 from logging_config import get_logger
-from message import BodyEcho, BodyEchoOk, BodyInit, BodyInitOk, Message
+from message import (
+    BodyEcho,
+    BodyEchoOk,
+    BodyGenerate,
+    BodyGenerateOk,
+    BodyInit,
+    BodyInitOk,
+    Message,
+)
 
 logger = get_logger(__name__)
 
 
-async def connect_stdin_stdout() -> (
-    tuple[asyncio.StreamReader, asyncio.StreamWriter]
-):  # noqa: WPS210
+async def connect_stdin_stdout() -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:  # noqa: WPS210
     loop = asyncio.get_running_loop()
     reader = asyncio.StreamReader()
     protocol = asyncio.StreamReaderProtocol(reader)
@@ -83,6 +89,8 @@ async def processor(
                 body = BodyEchoOk(echo=body.echo)
             elif isinstance(body, BodyInit):
                 body = BodyInitOk()
+            elif isinstance(body, BodyGenerate):
+                body = BodyGenerateOk(id=1)
             else:
                 shutdown_event.set()
                 break

@@ -7,6 +7,8 @@ class MessageType(StrEnum):
     INIT = "init"
     INIT_OK = "init_ok"
     ERROR = "error"
+    GENERATE = "generate"
+    GENERATE_OK = "generate_ok"
 
 
 class ErrorType(IntEnum):

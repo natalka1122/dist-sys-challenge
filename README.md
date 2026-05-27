@@ -4,12 +4,15 @@ Solutions to the [Fly.io Distributed Systems Challenge](https://fly.io/dist-sys/
 
 ## Status
 
-Currently working through **Challenge #1: Echo** ([spec](https://fly.io/dist-sys/1/)).
+Currently working through **Challenge #2: Unique ID Generation** ([spec](https://fly.io/dist-sys/2/)).
+
+- ✅ **Challenge #1 — Echo**: Completed and passing.
+- 🚧 **Challenge #2 — Unique ID Generation**: In progress (stub handler returns `id=1`).
 
 | Challenge | Status |
 |-----------|--------|
-| [#1 — Echo](https://fly.io/dist-sys/1/) | 🚧 In progress |
-| [#2 — Unique ID Generation](https://fly.io/dist-sys/2/) | ⏳ Not started |
+| [#1 — Echo](https://fly.io/dist-sys/1/) | ✅ Done |
+| [#2 — Unique ID Generation](https://fly.io/dist-sys/2/) | 🚧 In progress |
 | [#3 — Broadcast](https://fly.io/dist-sys/3/) | ⏳ Not started |
 | [#4 — Grow-Only Counter](https://fly.io/dist-sys/4/) | ⏳ Not started |
 | [#5 — Kafka-Style Log](https://fly.io/dist-sys/5/) | ⏳ Not started |

@@ -78,9 +78,7 @@ class BodyInit(Body):
                 f"Bad node_ids = {type(node_ids)} {node_ids} body_json = {body_json}"
             )
         node_ids = cast(list[str], node_ids)
-        if not all(
-            isinstance(k, str) for k in node_ids
-        ):  # pyright: ignore[reportUnnecessaryIsInstance]
+        if not all(isinstance(k, str) for k in node_ids):  # pyright: ignore[reportUnnecessaryIsInstance]
             raise BadMessageError(f"Wrong node_ids = {node_ids} body_json = {body_json}")
         return BodyInit(node_id=node_id, node_ids=node_ids)
 
@@ -133,6 +131,26 @@ class BodyError(Body):
         return BodyError(text=text, code=code)
 
 
+@dataclass(kw_only=True, frozen=True)
+class BodyGenerate(Body):
+    type: MessageType = MessageType.GENERATE
+
+    @classmethod
+    def from_json(cls, body_json: dict[Any, Any]) -> BodyGenerate:
+        return BodyGenerate()
+
+
+@dataclass(kw_only=True, frozen=True)
+class BodyGenerateOk(Body):
+    type: MessageType = MessageType.GENERATE_OK
+    id: int
+
+    @classmethod
+    def from_json(cls, body_json: dict[Any, Any]) -> BodyGenerateOk:
+        generated_id = _get_int(body_json, "id")
+        return BodyGenerateOk(id=generated_id)
+
+
 @dataclass(kw_only=True)
 class Message:
     src: str
@@ -176,6 +194,10 @@ class Message:
                 body = BodyInitOk.from_json(body_json)
             case MessageType.ERROR.value:
                 body = BodyError.from_json(body_json)
+            case MessageType.GENERATE.value:
+                body = BodyGenerate.from_json(body_json)
+            case MessageType.GENERATE_OK.value:
+                body = BodyGenerateOk.from_json(body_json)
             case _:
                 raise BadMessageError(
                     f"Not implemented: body_type_str = {body_type_str} raw_json = {raw_json}"
