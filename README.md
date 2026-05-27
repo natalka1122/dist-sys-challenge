@@ -62,21 +62,39 @@ python3 src/main.py
 
 ```bash
 # Build & launch the dev container (VS Code: Reopen in Container)
-# Then run the node against Maelstrom:
+# Then run the node directly with a message:
 cd /workspaces/dist-sys-challenge
+
+# Echo test
 echo '{"src":"c0","dest":"n1","body":{"type":"echo","msg_id":1,"echo":"hello"}}' | python3 src/main.py
+
+# Unique ID generation test
+echo '{"src":"c0","dest":"n1","body":{"type":"generate","msg_id":1}}' | python3 src/main.py
 ```
 
 ### With Maelstrom (full test suite)
 
 ```bash
 cd /workspaces/dist-sys-challenge
+
+# Echo challenge
 maelstrom test \
   -w echo \
   --bin "src/main.py" \
   --node-count 1 \
   --time-limit 10 \
   --rate 1 \
+  --log-stderr
+
+# Unique ID Generation challenge
+maelstrom test \
+  -w unique-ids \
+  --bin "src/main.py" \
+  --time-limit 30 \
+  --rate 1000 \
+  --node-count 3 \
+  --availability total \
+  --nemesis partition \
   --log-stderr
 ```
 
