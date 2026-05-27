@@ -67,15 +67,18 @@ maelstrom test -w echo --bin "src/main.py" --node-count 1 --time-limit 10 --rate
 
 # Maelstrom test (unique-ids challenge)
 maelstrom test -w unique-ids --bin "src/main.py" --time-limit 30 --rate 1000 --node-count 3 --availability total --nemesis partition --log-stderr
+
+# Maelstrom test (single-node broadcast challenge)
+maelstrom test -w broadcast --bin "src/main.py" --node-count 1 --time-limit 20 --rate 10 --log-stderr
 ```
 
 ## Current status
 
-- ✅ **Challenge #1 — Echo**: Completed and passing (init handshake + echo_ok reply).
-- ✅ **Issues #1–3**: `msg_id` generation, unique ID generation, and node identity storage — all implemented and closed.
-- 🚧 **Challenge #2 — Unique ID Generation**: Implemented (unique IDs via `{node_id}_{counter}`). CI pipeline has formatting issues to fix first, then re-run the unique-ids Maelstrom test.
+- ✅ **Challenge #1 — Echo**: Completed and passing.
+- ✅ **Challenge #2 — Unique ID Generation**: Completed and passing. Generates globally unique IDs (`{node_id}_{counter}`).
+- 🚧 **Challenge #3a — Single-Node Broadcast**: Starting next.
 
-**Last test result** (2026-05-27, pre-fix): 19,121 operations, all returned `id=1`. Duplicate count = 19,121. `:valid? false`.
+**Maelstrom test result** (2026-05-27): unique-ids — 14,544 operations, 0 duplicates, `:valid? true`.
 
 ## Issues
 
@@ -89,11 +92,34 @@ maelstrom test -w unique-ids --bin "src/main.py" --time-limit 30 --rate 1000 --n
 | [6](https://github.com/natalka1122/dist-sys-challenge/issues/6) | Return proper Maelstrom error instead of crashing on unknown types | Open |
 | [7](https://github.com/natalka1122/dist-sys-challenge/issues/7) | Reduce logging verbosity | Open |
 
+## Challenge breakdown
+
+The challenges are split into sub-challenges (a, b, c, ...):
+
+| # | Name | URL |
+|---|------|-----|
+| 1 | Echo | [/dist-sys/1](https://fly.io/dist-sys/1/) |
+| 2 | Unique ID Generation | [/dist-sys/2](https://fly.io/dist-sys/2/) |
+| 3a | Single-Node Broadcast | [/dist-sys/3a](https://fly.io/dist-sys/3a/) |
+| 3b | Multi-Node Broadcast | [/dist-sys/3b](https://fly.io/dist-sys/3b/) |
+| 3c | Fault Tolerant Broadcast | [/dist-sys/3c](https://fly.io/dist-sys/3c/) |
+| 3d | Efficient Broadcast, Part I | [/dist-sys/3d](https://fly.io/dist-sys/3d/) |
+| 3e | Efficient Broadcast, Part II | [/dist-sys/3e](https://fly.io/dist-sys/3e/) |
+| 4 | Grow-Only Counter | [/dist-sys/4](https://fly.io/dist-sys/4/) |
+| 5a | Single-Node Kafka-Style Log | [/dist-sys/5a](https://fly.io/dist-sys/5a/) |
+| 5b | Multi-Node Kafka-Style Log | [/dist-sys/5b](https://fly.io/dist-sys/5b/) |
+| 5c | Efficient Kafka-Style Log | [/dist-sys/5c](https://fly.io/dist-sys/5c/) |
+| 6a | Single-Node, Totally-Available Transactions | [/dist-sys/6a](https://fly.io/dist-sys/6a/) |
+| 6b | Totally-Available, Read Uncommitted Transactions | [/dist-sys/6b](https://fly.io/dist-sys/6b/) |
+| 6c | Totally-Available, Read Committed Transactions | [/dist-sys/6c](https://fly.io/dist-sys/6c/) |
+
 ## Known gaps
 
 1. **Unit tests** — no tests yet. Only end-to-end via Maelstrom.
 2. **Handler dispatch** — still uses `if/elif` chain in `processor()`. Will need a registry pattern as more body types are added.
-3. **`src`/`dest` swapping** — processor blindly swaps src/dest instead of using `gg_state.node_id`. Works for single-node echo/generate, needs fixing for multi-node challenges.
+3. **`src`/`dest` swapping** — processor blindly swaps src/dest instead of using `gg_state.node_id`. Works for single-node echo/generate, needs fixing for multi-node challenges (3b+).
+4. **Fire-and-forget messaging** — 3a introduces `Send()` (no reply expected). Need an async send mechanism alongside RPC.
+5. **Message routing** — currently only replies. 3a+ needs ability to send to specific nodes via `node_ids`.
 
 ## Tech
 
