@@ -5,8 +5,8 @@ import signal
 import sys
 from functools import partial
 
-from logging_config import get_logger, setup_logging
 from gossip_gloomers_app import gossip_gloomers_app
+from logging_config import get_logger, setup_logging
 
 logger = get_logger(__name__)
 
