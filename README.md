@@ -4,17 +4,17 @@ Solutions to the [Fly.io Distributed Systems Challenge](https://fly.io/dist-sys/
 
 ## Status
 
-Currently working through **Challenge #3a: Single-Node Broadcast** ([spec](https://fly.io/dist-sys/3a/)).
+Currently working through **Challenge #3b: Multi-Node Broadcast** ([spec](https://fly.io/dist-sys/3b/)).
 
 - ✅ **Challenge #1 — Echo**: Completed and passing.
 - ✅ **Challenge #2 — Unique ID Generation**: Completed and passing. Generates globally unique IDs (`{node_id}_{counter}`).
-- 🚧 **Challenge #3a — Single-Node Broadcast**: Starting next.
+- ✅ **Challenge #3a — Single-Node Broadcast**: Completed and passing. Stores broadcast messages in a set, replies `broadcast_ok` and `read_ok`.
 
 | # | Challenge | URL | Status |
 |---|-----------|-----|--------|
 | 1 | Echo | [/dist-sys/1](https://fly.io/dist-sys/1/) | ✅ Done |
 | 2 | Unique ID Generation | [/dist-sys/2](https://fly.io/dist-sys/2/) | ✅ Done |
-| 3a | Single-Node Broadcast | [/dist-sys/3a](https://fly.io/dist-sys/3a/) | 🚧 In progress |
+| 3a | Single-Node Broadcast | [/dist-sys/3a](https://fly.io/dist-sys/3a/) | ✅ Done |
 | 3b | Multi-Node Broadcast | [/dist-sys/3b](https://fly.io/dist-sys/3b/) | ⏳ Not started |
 | 3c | Fault Tolerant Broadcast | [/dist-sys/3c](https://fly.io/dist-sys/3c/) | ⏳ Not started |
 | 3d | Efficient Broadcast, Part I | [/dist-sys/3d](https://fly.io/dist-sys/3d/) | ⏳ Not started |

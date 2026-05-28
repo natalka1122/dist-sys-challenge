@@ -78,9 +78,13 @@ maelstrom test -w broadcast --bin "src/main.py" --node-count 1 --time-limit 20 -
 
 - ✅ **Challenge #1 — Echo**: Completed and passing.
 - ✅ **Challenge #2 — Unique ID Generation**: Completed and passing. Generates globally unique IDs (`{node_id}_{counter}`).
-- 🚧 **Challenge #3a — Single-Node Broadcast**: Starting next.
+- ✅ **Challenge #3a — Single-Node Broadcast**: Completed and passing. Stores messages in `GGState.broadcast`, replies `broadcast_ok` and `read_ok`. 210 operations, 0 lost/duplicated/stale, `:valid? true`.
 
-**Maelstrom test result** (2026-05-27): unique-ids — 14,544 operations, 0 duplicates, `:valid? true`.
+**Maelstrom test results**
+
+- **Echo** (2026-05-27): passing.
+- **unique-ids** (2026-05-27): 14,544 operations, 0 duplicates, `:valid? true`.
+- **broadcast (3a)** (2026-05-28): 210 operations, 115/115 broadcast ok, 95/95 read ok, 0 lost/duplicated/stale, `:valid? true`.
 
 ## Issues
 
@@ -98,22 +102,22 @@ maelstrom test -w broadcast --bin "src/main.py" --node-count 1 --time-limit 20 -
 
 The challenges are split into sub-challenges (a, b, c, ...):
 
-| # | Name | URL |
-|---|------|-----|
+| # | Name | URL | Status |
+|---|------|-----|--------|
 | 1 | Echo | [/dist-sys/1](https://fly.io/dist-sys/1/) |
 | 2 | Unique ID Generation | [/dist-sys/2](https://fly.io/dist-sys/2/) |
-| 3a | Single-Node Broadcast | [/dist-sys/3a](https://fly.io/dist-sys/3a/) |
-| 3b | Multi-Node Broadcast | [/dist-sys/3b](https://fly.io/dist-sys/3b/) |
-| 3c | Fault Tolerant Broadcast | [/dist-sys/3c](https://fly.io/dist-sys/3c/) |
-| 3d | Efficient Broadcast, Part I | [/dist-sys/3d](https://fly.io/dist-sys/3d/) |
-| 3e | Efficient Broadcast, Part II | [/dist-sys/3e](https://fly.io/dist-sys/3e/) |
-| 4 | Grow-Only Counter | [/dist-sys/4](https://fly.io/dist-sys/4/) |
-| 5a | Single-Node Kafka-Style Log | [/dist-sys/5a](https://fly.io/dist-sys/5a/) |
-| 5b | Multi-Node Kafka-Style Log | [/dist-sys/5b](https://fly.io/dist-sys/5b/) |
-| 5c | Efficient Kafka-Style Log | [/dist-sys/5c](https://fly.io/dist-sys/5c/) |
-| 6a | Single-Node, Totally-Available Transactions | [/dist-sys/6a](https://fly.io/dist-sys/6a/) |
-| 6b | Totally-Available, Read Uncommitted Transactions | [/dist-sys/6b](https://fly.io/dist-sys/6b/) |
-| 6c | Totally-Available, Read Committed Transactions | [/dist-sys/6c](https://fly.io/dist-sys/6c/) |
+| 3a | Single-Node Broadcast | [/dist-sys/3a](https://fly.io/dist-sys/3a/) | ✅ Done |
+| 3b | Multi-Node Broadcast | [/dist-sys/3b](https://fly.io/dist-sys/3b/) | ⏳ Not started |
+| 3c | Fault Tolerant Broadcast | [/dist-sys/3c](https://fly.io/dist-sys/3c/) | ⏳ Not started |
+| 3d | Efficient Broadcast, Part I | [/dist-sys/3d](https://fly.io/dist-sys/3d/) | ⏳ Not started |
+| 3e | Efficient Broadcast, Part II | [/dist-sys/3e](https://fly.io/dist-sys/3e/) | ⏳ Not started |
+| 4 | Grow-Only Counter | [/dist-sys/4](https://fly.io/dist-sys/4/) | ⏳ Not started |
+| 5a | Single-Node Kafka-Style Log | [/dist-sys/5a](https://fly.io/dist-sys/5a/) | ⏳ Not started |
+| 5b | Multi-Node Kafka-Style Log | [/dist-sys/5b](https://fly.io/dist-sys/5b/) | ⏳ Not started |
+| 5c | Efficient Kafka-Style Log | [/dist-sys/5c](https://fly.io/dist-sys/5c/) | ⏳ Not started |
+| 6a | Single-Node, Totally-Available Transactions | [/dist-sys/6a](https://fly.io/dist-sys/6a/) | ⏳ Not started |
+| 6b | Totally-Available, Read Uncommitted Transactions | [/dist-sys/6b](https://fly.io/dist-sys/6b/) | ⏳ Not started |
+| 6c | Totally-Available, Read Committed Transactions | [/dist-sys/6c](https://fly.io/dist-sys/6c/) | ⏳ Not started |
 
 ## Known gaps
 
