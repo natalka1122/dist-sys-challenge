@@ -24,7 +24,9 @@ from message import (
 logger = get_logger(__name__)
 
 
-async def connect_stdin_stdout() -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:  # noqa: WPS210
+async def connect_stdin_stdout() -> (
+    tuple[asyncio.StreamReader, asyncio.StreamWriter]
+):  # noqa: WPS210
     loop = asyncio.get_running_loop()
     reader = asyncio.StreamReader()
     protocol = asyncio.StreamReaderProtocol(reader)

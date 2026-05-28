@@ -88,7 +88,9 @@ class BodyInit(Body):
                 f"Bad node_ids = {type(node_ids)} {node_ids} body_json = {body_json}"
             )
         node_ids = cast(list[str], node_ids)
-        if not all(isinstance(k, str) for k in node_ids):  # pyright: ignore[reportUnnecessaryIsInstance]
+        if not all(
+            isinstance(k, str) for k in node_ids
+        ):  # pyright: ignore[reportUnnecessaryIsInstance]
             raise BadMessageError(f"Wrong node_ids = {node_ids} body_json = {body_json}")
         return BodyInit(node_id=node_id, node_ids=node_ids)
 
