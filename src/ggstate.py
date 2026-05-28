@@ -4,6 +4,7 @@ class GGState:  # noqa: WPS230
         self._next_generate_id: int = 0
         self.node_id: str | None = None
         self.node_ids: set[str] = set()
+        self.broadcast: set[int] = set()
 
     @property
     def next_msg_id(self) -> int:

@@ -9,6 +9,12 @@ class MessageType(StrEnum):
     ERROR = "error"
     GENERATE = "generate"
     GENERATE_OK = "generate_ok"
+    BROADCAST = "broadcast"
+    BROADCAST_OK = "broadcast_ok"
+    TOPOLOGY = "topology"
+    TOPOLOGY_OK = "topology_ok"
+    READ = "read"
+    READ_OK = "read_ok"
 
 
 class ErrorType(IntEnum):

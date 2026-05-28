@@ -6,21 +6,25 @@ from exceptions import BadMessageError
 from ggstate import GGState
 from logging_config import get_logger
 from message import (
+    BodyBroadcast,
+    BodyBroadcastOk,
     BodyEcho,
     BodyEchoOk,
     BodyGenerate,
     BodyGenerateOk,
     BodyInit,
     BodyInitOk,
+    BodyRead,
+    BodyReadOk,
+    BodyTopology,
+    BodyTopologyOk,
     Message,
 )
 
 logger = get_logger(__name__)
 
 
-async def connect_stdin_stdout() -> (
-    tuple[asyncio.StreamReader, asyncio.StreamWriter]
-):  # noqa: WPS210
+async def connect_stdin_stdout() -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:  # noqa: WPS210
     loop = asyncio.get_running_loop()
     reader = asyncio.StreamReader()
     protocol = asyncio.StreamReaderProtocol(reader)
@@ -94,15 +98,22 @@ async def processor(
             if isinstance(body, BodyEcho):
                 body = BodyEchoOk(echo=body.echo)
             elif isinstance(body, BodyInit):
-                if gg_state.node_id is not None:
+                if isinstance(gg_state.node_id, str):
                     logger.error(f"Got init but already have node_id. body = {body}")
                     shutdown_event.set()
                     break
                 gg_state.node_id = body.node_id
                 gg_state.node_ids = set(body.node_ids)
                 body = BodyInitOk()
+            elif isinstance(body, BodyTopology):
+                body = BodyTopologyOk()
             elif isinstance(body, BodyGenerate):
                 body = BodyGenerateOk(id=gg_state.next_generate_id)
+            elif isinstance(body, BodyBroadcast):
+                gg_state.broadcast.add(body.message)
+                body = BodyBroadcastOk()
+            elif isinstance(body, BodyRead):
+                body = BodyReadOk(messages=list(gg_state.broadcast))
             else:
                 logger.error(f"Got unknown body = {body}")
                 shutdown_event.set()

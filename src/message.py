@@ -43,6 +43,16 @@ def _get_dict_with_str_keys(raw_json: dict[Any, Any], key: str) -> DictWithStrKe
     return result
 
 
+def _get_list_with_int(raw_json: dict[Any, Any], key: str) -> list[int]:
+    result = raw_json.get(key)
+    if not isinstance(result, list):
+        raise BadMessageError(f"Wrong {key} = {type(result)} {result} result = {raw_json}")
+    result = cast(list[int], result)
+    if not all(isinstance(k, int) for k in result):  # pyright: ignore[reportUnnecessaryIsInstance]
+        raise BadMessageError(f"Wrong {key} = {type(result)} {result} result = {raw_json}")
+    return result
+
+
 @dataclass(kw_only=True, frozen=True)
 class Body:
     type: MessageType
@@ -78,9 +88,7 @@ class BodyInit(Body):
                 f"Bad node_ids = {type(node_ids)} {node_ids} body_json = {body_json}"
             )
         node_ids = cast(list[str], node_ids)
-        if not all(
-            isinstance(k, str) for k in node_ids
-        ):  # pyright: ignore[reportUnnecessaryIsInstance]
+        if not all(isinstance(k, str) for k in node_ids):  # pyright: ignore[reportUnnecessaryIsInstance]
             raise BadMessageError(f"Wrong node_ids = {node_ids} body_json = {body_json}")
         return BodyInit(node_id=node_id, node_ids=node_ids)
 
@@ -153,6 +161,66 @@ class BodyGenerateOk(Body):
         return BodyGenerateOk(id=generated_id)
 
 
+@dataclass(kw_only=True, frozen=True)
+class BodyBroadcast(Body):
+    type: MessageType = MessageType.BROADCAST
+    message: int
+
+    @classmethod
+    def from_json(cls, body_json: dict[Any, Any]) -> BodyBroadcast:
+        message = _get_int(body_json, "message")
+        return BodyBroadcast(message=message)
+
+
+@dataclass(kw_only=True, frozen=True)
+class BodyBroadcastOk(Body):
+    type: MessageType = MessageType.BROADCAST_OK
+
+    @classmethod
+    def from_json(cls, body_json: dict[Any, Any]) -> BodyBroadcastOk:
+        return BodyBroadcastOk()
+
+
+@dataclass(kw_only=True, frozen=True)
+class BodyTopology(Body):
+    type: MessageType = MessageType.TOPOLOGY
+    topology: DictWithStrKeys
+
+    @classmethod
+    def from_json(cls, body_json: dict[Any, Any]) -> BodyTopology:
+        topology = _get_dict_with_str_keys(body_json, "topology")
+        return BodyTopology(topology=topology)
+
+
+@dataclass(kw_only=True, frozen=True)
+class BodyTopologyOk(Body):
+    type: MessageType = MessageType.TOPOLOGY_OK
+
+    @classmethod
+    def from_json(cls, body_json: dict[Any, Any]) -> BodyTopologyOk:
+        return BodyTopologyOk()
+
+
+@dataclass(kw_only=True, frozen=True)
+class BodyRead(Body):
+    type: MessageType = MessageType.READ
+
+    @classmethod
+    def from_json(cls, body_json: dict[Any, Any]) -> BodyRead:
+        return BodyRead()
+
+
+@dataclass(kw_only=True, frozen=True)
+class BodyReadOk(Body):
+    type: MessageType = MessageType.READ_OK
+    messages: list[int]
+
+    @classmethod
+    def from_json(cls, body_json: dict[Any, Any]) -> BodyReadOk:
+        messages = _get_list_with_int(body_json, "messages")
+        return BodyReadOk(messages=messages)
+
+
 @dataclass(kw_only=True)
 class Message:
     src: str
@@ -200,6 +268,18 @@ class Message:
                 body = BodyGenerate.from_json(body_json)
             case MessageType.GENERATE_OK.value:
                 body = BodyGenerateOk.from_json(body_json)
+            case MessageType.BROADCAST.value:
+                body = BodyBroadcast.from_json(body_json)
+            case MessageType.BROADCAST_OK.value:
+                body = BodyBroadcastOk.from_json(body_json)
+            case MessageType.TOPOLOGY.value:
+                body = BodyTopology.from_json(body_json)
+            case MessageType.TOPOLOGY_OK.value:
+                body = BodyTopologyOk.from_json(body_json)
+            case MessageType.READ.value:
+                body = BodyRead.from_json(body_json)
+            case MessageType.READ_OK.value:
+                body = BodyReadOk.from_json(body_json)
             case _:
                 raise BadMessageError(
                     f"Not implemented: body_type_str = {body_type_str} raw_json = {raw_json}"
