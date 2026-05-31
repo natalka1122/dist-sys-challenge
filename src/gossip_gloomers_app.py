@@ -79,7 +79,7 @@ async def write_json(
             await asyncio.wait(
                 [shutdown.task, writer_drain_task], return_when=asyncio.FIRST_COMPLETED
             )
-            logger.info(f"write {next_item}")
+            logger.debug(f"write {next_item}")
     logger.info("Stopped write_json")
 
 
@@ -122,7 +122,7 @@ async def processor(
                 src=read_data.dest, dest=read_data.src, body=body, in_reply_to=read_data.msg_id
             )
             await write_queue.put(message)
-            logger.info(f"processed {read_data} => {message}")
+            logger.debug(f"processed {read_data} => {message}")
     logger.info("Stopped processor")
 
 

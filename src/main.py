@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import asyncio
+import os
 import signal
 import sys
 from functools import partial
@@ -9,6 +10,7 @@ from gossip_gloomers_app import gossip_gloomers_app
 from logging_config import get_logger, setup_logging
 
 logger = get_logger(__name__)
+DEFAULT_LOG_LEVEL = "INFO"
 
 
 def _signal_handler(shutdown_event: asyncio.Event) -> None:
@@ -28,9 +30,10 @@ def setup_signal_handlers(shutdown_event: asyncio.Event) -> None:
 
 
 async def main() -> None:
+    log_level = os.environ.get("LOG_LEVEL", DEFAULT_LOG_LEVEL)
     shutdown_event = asyncio.Event()
     setup_signal_handlers(shutdown_event)
-    setup_logging(level="DEBUG", log_dir="logs")
+    setup_logging(level=log_level)
     await gossip_gloomers_app(
         shutdown_event=shutdown_event,
     )
