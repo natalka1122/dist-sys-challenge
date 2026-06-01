@@ -4,7 +4,7 @@ from typing import Any
 from const import DictWithStrKeys, MessageType
 from logging_config import get_logger
 from messages.body import Body
-from messages.getters import get_dict_with_str_keys
+from messages.func import get_dict_with_str_keys
 
 logger = get_logger(__name__)
 

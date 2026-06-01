@@ -4,7 +4,7 @@ from typing import Any
 from const import ErrorType, MessageType
 from logging_config import get_logger
 from messages.body import Body
-from messages.getters import get_int, get_str
+from messages.func import get_int, get_str
 
 logger = get_logger(__name__)
 

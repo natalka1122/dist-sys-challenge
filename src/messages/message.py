@@ -6,7 +6,7 @@ from const import DictWithStrKeys, MessageType
 from exceptions import BadMessageError
 from logging_config import get_logger
 from messages.body import Body
-from messages.getters import get_dict_with_str_keys, get_int_or_none, get_str
+from messages.func import get_dict_with_str_keys, get_int_or_none, get_str
 
 logger = get_logger(__name__)
 
@@ -30,7 +30,7 @@ class Message:
         return result
 
     @classmethod
-    def from_bytes(cls, raw_bytes: bytes) -> Message:
+    def from_bytes(cls, raw_bytes: bytes) -> Message:  # noqa: WPS210
         try:
             raw_json = json.loads(raw_bytes)
         except json.JSONDecodeError:
@@ -50,36 +50,25 @@ class Message:
         from messages.body_read import BodyRead, BodyReadOk
         from messages.body_topology import BodyTopology, BodyTopologyOk
 
-        body: Body
-        match body_type_str:
-            case MessageType.ECHO.value:
-                body = BodyEcho.from_json(body_json)
-            case MessageType.ECHO_OK.value:
-                body = BodyEchoOk.from_json(body_json)
-            case MessageType.INIT.value:
-                body = BodyInit.from_json(body_json)
-            case MessageType.INIT_OK.value:
-                body = BodyInitOk.from_json(body_json)
-            case MessageType.ERROR.value:
-                body = BodyError.from_json(body_json)
-            case MessageType.GENERATE.value:
-                body = BodyGenerate.from_json(body_json)
-            case MessageType.GENERATE_OK.value:
-                body = BodyGenerateOk.from_json(body_json)
-            case MessageType.BROADCAST.value:
-                body = BodyBroadcast.from_json(body_json)
-            case MessageType.BROADCAST_OK.value:
-                body = BodyBroadcastOk.from_json(body_json)
-            case MessageType.TOPOLOGY.value:
-                body = BodyTopology.from_json(body_json)
-            case MessageType.TOPOLOGY_OK.value:
-                body = BodyTopologyOk.from_json(body_json)
-            case MessageType.READ.value:
-                body = BodyRead.from_json(body_json)
-            case MessageType.READ_OK.value:
-                body = BodyReadOk.from_json(body_json)
-            case _:
-                raise BadMessageError(
-                    f"Not implemented: body_type_str = {body_type_str} raw_json = {raw_json}"
-                )
+        body_dict: dict[str, type[Body]] = {
+            MessageType.ECHO.value: BodyEcho,
+            MessageType.ECHO_OK.value: BodyEchoOk,
+            MessageType.BROADCAST.value: BodyBroadcast,
+            MessageType.BROADCAST_OK.value: BodyBroadcastOk,
+            MessageType.GENERATE.value: BodyGenerate,
+            MessageType.GENERATE_OK.value: BodyGenerateOk,
+            MessageType.INIT.value: BodyInit,
+            MessageType.INIT_OK.value: BodyInitOk,
+            MessageType.READ.value: BodyRead,
+            MessageType.READ_OK.value: BodyReadOk,
+            MessageType.TOPOLOGY.value: BodyTopology,
+            MessageType.TOPOLOGY_OK.value: BodyTopologyOk,
+            MessageType.ERROR.value: BodyError,
+        }
+        body_type: type[Body] | None = body_dict.get(body_type_str)
+        if body_type is None:
+            raise BadMessageError(
+                f"Not implemented: body_type_str = {body_type_str} raw_json = {raw_json}"
+            )
+        body = body_type.from_json(body_json)
         return Message(src=src, dest=dest, msg_id=msg_id, body=body, in_reply_to=in_reply_to)
