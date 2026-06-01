@@ -2,31 +2,13 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
-from const import DictWithStrKeys, ErrorType, MessageType
+from const import DictWithStrKeys, MessageType
 from exceptions import BadMessageError
 from logging_config import get_logger
 from messages.body import Body
-from messages.getters import (
-    get_dict_with_str_keys,
-    get_int,
-    get_int_or_none,
-    get_str,
-)
+from messages.getters import get_dict_with_str_keys, get_int_or_none, get_str
 
 logger = get_logger(__name__)
-
-
-@dataclass(kw_only=True, frozen=True)
-class BodyError(Body):
-    type: MessageType = MessageType.ERROR
-    text: str
-    code: ErrorType
-
-    @classmethod
-    def from_json(cls, body_json: dict[Any, Any]) -> BodyError:
-        text = get_str(body_json, "text")
-        code = ErrorType(get_int(body_json, "code"))
-        return BodyError(text=text, code=code)
 
 
 @dataclass(kw_only=True)
@@ -62,6 +44,7 @@ class Message:
 
         from messages.body_broadcast import BodyBroadcast, BodyBroadcastOk
         from messages.body_echo import BodyEcho, BodyEchoOk
+        from messages.body_error import BodyError
         from messages.body_generate import BodyGenerate, BodyGenerateOk
         from messages.body_init import BodyInit, BodyInitOk
         from messages.body_read import BodyRead, BodyReadOk
