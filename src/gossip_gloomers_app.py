@@ -5,15 +5,14 @@ import sys
 from exceptions import BadMessageError
 from ggstate import GGState
 from logging_config import get_logger
-from message import (
+from messages.body_init import BodyInit, BodyInitOk
+from messages.message import (
     BodyBroadcast,
     BodyBroadcastOk,
     BodyEcho,
     BodyEchoOk,
     BodyGenerate,
     BodyGenerateOk,
-    BodyInit,
-    BodyInitOk,
     BodyRead,
     BodyReadOk,
     BodyTopology,
@@ -25,9 +24,9 @@ from shutdown import Shutdown
 logger = get_logger(__name__)
 
 
-async def connect_stdin_stdout() -> (
+async def connect_stdin_stdout() -> (  # noqa: WPS210
     tuple[asyncio.StreamReader, asyncio.StreamWriter]
-):  # noqa: WPS210
+):
     loop = asyncio.get_running_loop()
     reader = asyncio.StreamReader()
     protocol = asyncio.StreamReaderProtocol(reader)
@@ -54,9 +53,9 @@ async def read_json(
             except BadMessageError as exc:
                 logger.error(f"Got {result!r}, bad message, {exc}")
                 shutdown.event.set()
-            else:
-                logger.debug(f"message = {message.to_json()}")
-                await read_queue.put(message)
+                break
+            logger.debug(f"message = {message.to_json()}")
+            await read_queue.put(message)
     logger.info("Stopped read_json")
 
 
