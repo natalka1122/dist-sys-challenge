@@ -1,80 +1,19 @@
 import json
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any
 
 from const import DictWithStrKeys, ErrorType, MessageType
 from exceptions import BadMessageError
 from logging_config import get_logger
 from messages.body import Body
+from messages.getters import (
+    get_dict_with_str_keys,
+    get_int,
+    get_int_or_none,
+    get_str,
+)
 
 logger = get_logger(__name__)
-
-
-def _get_str(raw_json: dict[Any, Any], key: str) -> str:
-    result = raw_json.get(key)
-    if not isinstance(result, str):
-        raise BadMessageError(f"Wrong {key} = {type(result)} {result} raw_json = {raw_json}")
-    return result
-
-
-def _get_int_or_none(raw_json: dict[Any, Any], key: str) -> int | None:
-    result = raw_json.get(key)
-    if result is not None and not isinstance(result, int):
-        raise BadMessageError(f"Wrong {key} = {type(result)} {result} raw_json = {raw_json}")
-    return result
-
-
-def _get_int(raw_json: dict[Any, Any], key: str) -> int:
-    result = raw_json.get(key)
-    if not isinstance(result, int):
-        raise BadMessageError(f"Wrong {key} = {type(result)} {result} raw_json = {raw_json}")
-    return result
-
-
-def _get_dict_with_str_keys(raw_json: dict[Any, Any], key: str) -> DictWithStrKeys:
-    result = raw_json.get(key)
-    if not isinstance(result, dict):
-        raise BadMessageError(f"Wrong {key} = {type(result)} {result} result = {raw_json}")
-    result = cast(DictWithStrKeys, result)
-    if not all(isinstance(k, str) for k in result):  # pyright: ignore[reportUnnecessaryIsInstance]
-        raise BadMessageError(f"Wrong {key} = {type(result)} {result} result = {raw_json}")
-    return result
-
-
-def _get_list_with_int(raw_json: dict[Any, Any], key: str) -> list[int]:
-    result = raw_json.get(key)
-    if not isinstance(result, list):
-        raise BadMessageError(f"Wrong {key} = {type(result)} {result} result = {raw_json}")
-    result = cast(list[int], result)
-    if not all(isinstance(k, int) for k in result):  # pyright: ignore[reportUnnecessaryIsInstance]
-        raise BadMessageError(f"Wrong {key} = {type(result)} {result} result = {raw_json}")
-    return result
-
-
-@dataclass(kw_only=True, frozen=True)
-class BodyEcho(Body):
-    type: MessageType = MessageType.ECHO
-    echo: str
-
-    @classmethod
-    def from_json(cls, body_json: dict[Any, Any]) -> BodyEcho:
-        echo = body_json.get("echo")
-        if not isinstance(echo, str):
-            raise BadMessageError(f"Bad echo = {type(echo)} {echo} body_json = {body_json}")
-        return BodyEcho(echo=echo)
-
-
-@dataclass(kw_only=True, frozen=True)
-class BodyEchoOk(Body):
-    type: MessageType = MessageType.ECHO_OK
-    echo: str
-
-    @classmethod
-    def from_json(cls, body_json: dict[Any, Any]) -> BodyEchoOk:
-        echo = body_json.get("echo")
-        if not isinstance(echo, str):
-            raise BadMessageError(f"Bad echo = {type(echo)} {echo} body_json = {body_json}")
-        return BodyEchoOk(echo=echo)
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -85,89 +24,9 @@ class BodyError(Body):
 
     @classmethod
     def from_json(cls, body_json: dict[Any, Any]) -> BodyError:
-        text = _get_str(body_json, "text")
-        code = ErrorType(_get_int(body_json, "code"))
+        text = get_str(body_json, "text")
+        code = ErrorType(get_int(body_json, "code"))
         return BodyError(text=text, code=code)
-
-
-@dataclass(kw_only=True, frozen=True)
-class BodyGenerate(Body):
-    type: MessageType = MessageType.GENERATE
-
-    @classmethod
-    def from_json(cls, body_json: dict[Any, Any]) -> BodyGenerate:
-        return BodyGenerate()
-
-
-@dataclass(kw_only=True, frozen=True)
-class BodyGenerateOk(Body):
-    type: MessageType = MessageType.GENERATE_OK
-    id: str
-
-    @classmethod
-    def from_json(cls, body_json: dict[Any, Any]) -> BodyGenerateOk:
-        generated_id = _get_str(body_json, "id")
-        return BodyGenerateOk(id=generated_id)
-
-
-@dataclass(kw_only=True, frozen=True)
-class BodyBroadcast(Body):
-    type: MessageType = MessageType.BROADCAST
-    message: int
-
-    @classmethod
-    def from_json(cls, body_json: dict[Any, Any]) -> BodyBroadcast:
-        message = _get_int(body_json, "message")
-        return BodyBroadcast(message=message)
-
-
-@dataclass(kw_only=True, frozen=True)
-class BodyBroadcastOk(Body):
-    type: MessageType = MessageType.BROADCAST_OK
-
-    @classmethod
-    def from_json(cls, body_json: dict[Any, Any]) -> BodyBroadcastOk:
-        return BodyBroadcastOk()
-
-
-@dataclass(kw_only=True, frozen=True)
-class BodyTopology(Body):
-    type: MessageType = MessageType.TOPOLOGY
-    topology: DictWithStrKeys
-
-    @classmethod
-    def from_json(cls, body_json: dict[Any, Any]) -> BodyTopology:
-        topology = _get_dict_with_str_keys(body_json, "topology")
-        return BodyTopology(topology=topology)
-
-
-@dataclass(kw_only=True, frozen=True)
-class BodyTopologyOk(Body):
-    type: MessageType = MessageType.TOPOLOGY_OK
-
-    @classmethod
-    def from_json(cls, body_json: dict[Any, Any]) -> BodyTopologyOk:
-        return BodyTopologyOk()
-
-
-@dataclass(kw_only=True, frozen=True)
-class BodyRead(Body):
-    type: MessageType = MessageType.READ
-
-    @classmethod
-    def from_json(cls, body_json: dict[Any, Any]) -> BodyRead:
-        return BodyRead()
-
-
-@dataclass(kw_only=True, frozen=True)
-class BodyReadOk(Body):
-    type: MessageType = MessageType.READ_OK
-    messages: list[int]
-
-    @classmethod
-    def from_json(cls, body_json: dict[Any, Any]) -> BodyReadOk:
-        messages = _get_list_with_int(body_json, "messages")
-        return BodyReadOk(messages=messages)
 
 
 @dataclass(kw_only=True)
@@ -194,14 +53,19 @@ class Message:
             raw_json = json.loads(raw_bytes)
         except json.JSONDecodeError:
             raise BadMessageError(f"Malformed raw_bytes = {raw_bytes!r}")
-        src = _get_str(raw_json, "src")
-        dest = _get_str(raw_json, "dest")
-        body_json: DictWithStrKeys = _get_dict_with_str_keys(raw_json, "body")
-        body_type_str = _get_str(body_json, "type")
-        msg_id = _get_int_or_none(body_json, "msg_id")
-        in_reply_to = _get_int_or_none(body_json, "in_reply_to")
+        src = get_str(raw_json, "src")
+        dest = get_str(raw_json, "dest")
+        body_json: DictWithStrKeys = get_dict_with_str_keys(raw_json, "body")
+        body_type_str = get_str(body_json, "type")
+        msg_id = get_int_or_none(body_json, "msg_id")
+        in_reply_to = get_int_or_none(body_json, "in_reply_to")
 
+        from messages.body_broadcast import BodyBroadcast, BodyBroadcastOk
+        from messages.body_echo import BodyEcho, BodyEchoOk
+        from messages.body_generate import BodyGenerate, BodyGenerateOk
         from messages.body_init import BodyInit, BodyInitOk
+        from messages.body_read import BodyRead, BodyReadOk
+        from messages.body_topology import BodyTopology, BodyTopologyOk
 
         body: Body
         match body_type_str:

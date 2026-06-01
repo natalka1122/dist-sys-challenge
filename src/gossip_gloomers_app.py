@@ -5,20 +5,22 @@ import sys
 from exceptions import BadMessageError
 from ggstate import GGState
 from logging_config import get_logger
-from messages.body_init import BodyInit, BodyInitOk
-from messages.message import (
+from messages.body_broadcast import (
     BodyBroadcast,
     BodyBroadcastOk,
-    BodyEcho,
-    BodyEchoOk,
-    BodyGenerate,
-    BodyGenerateOk,
+)
+from messages.body_echo import BodyEcho, BodyEchoOk
+from messages.body_generate import BodyGenerate, BodyGenerateOk
+from messages.body_init import BodyInit, BodyInitOk
+from messages.body_read import (
     BodyRead,
     BodyReadOk,
+)
+from messages.body_topology import (
     BodyTopology,
     BodyTopologyOk,
-    Message,
 )
+from messages.message import Message
 from shutdown import Shutdown
 
 logger = get_logger(__name__)
