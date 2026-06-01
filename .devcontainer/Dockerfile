@@ -13,7 +13,7 @@ RUN apt-get update && \
 
 # Setup python with packages
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.14 1
-RUN pip install --break-system-packages --upgrade argcomplete mypy pytest pytest-cov pytest-asyncio black wemake-python-styleguide cohesion dlint pytest-xdist vulture isort jupyter uv
+RUN pip install --break-system-packages --upgrade argcomplete mypy pytest pytest-cov pytest-asyncio black wemake-python-styleguide cohesion dlint pytest-xdist vulture isort jupyter uv ruff
 
 # Install maelstrom
 RUN mkdir -p /opt/maelstrom && \
