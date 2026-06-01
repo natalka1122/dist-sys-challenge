@@ -1,5 +1,7 @@
 FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
+ARG PI_VERSION=v0.78.0
+
 # Install packages
 RUN apt-get update && \
     apt-get install -y software-properties-common && \
@@ -9,8 +11,8 @@ RUN apt-get update && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
+# Setup python with packages
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.14 1
-
 RUN pip install --break-system-packages --upgrade argcomplete mypy pytest pytest-cov pytest-asyncio black wemake-python-styleguide cohesion dlint pytest-xdist vulture isort jupyter uv
 
 # Install maelstrom
@@ -24,11 +26,10 @@ ENV PATH="/opt/maelstrom:${PATH}"
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     apt-get update && \
     apt-get install -y --no-install-recommends nodejs && \
-    npm install -g @mariozechner/pi-coding-agent && \
+    npm install -g --ignore-scripts @earendil-works/pi-coding-agent@${PI_VERSION} && \
     npm cache clean --force && \
     rm -rf /var/lib/apt/lists/*
-RUN pi update && \
-    pi install npm:pi-subagents && \
+RUN pi install npm:pi-subagents && \
     pi install npm:pi-mcp-adapter
 
 EXPOSE 8080
