@@ -1,4 +1,7 @@
 from enum import IntEnum, StrEnum
+from typing import Any
+
+DictWithStrKeys = dict[str, Any]
 
 
 class MessageType(StrEnum):

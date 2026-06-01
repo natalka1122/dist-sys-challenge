@@ -1,15 +1,13 @@
 import json
-from abc import abstractmethod
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from typing import Any, cast
 
-from const import ErrorType, MessageType
+from const import DictWithStrKeys, ErrorType, MessageType
 from exceptions import BadMessageError
 from logging_config import get_logger
+from messages.body import Body
 
 logger = get_logger(__name__)
-
-DictWithStrKeys = dict[str, Any]
 
 
 def _get_str(raw_json: dict[Any, Any], key: str) -> str:
@@ -51,57 +49,6 @@ def _get_list_with_int(raw_json: dict[Any, Any], key: str) -> list[int]:
     if not all(isinstance(k, int) for k in result):  # pyright: ignore[reportUnnecessaryIsInstance]
         raise BadMessageError(f"Wrong {key} = {type(result)} {result} result = {raw_json}")
     return result
-
-
-@dataclass(kw_only=True, frozen=True)
-class Body:
-    type: MessageType
-
-    def to_json(self) -> DictWithStrKeys:
-        result: DictWithStrKeys = {"type": self.type.value}
-        for key, value in asdict(self).items():
-            if key != "type":
-                result[key] = value
-        return result
-
-    @classmethod
-    @abstractmethod
-    def from_json(cls, body_json: dict[Any, Any]) -> "Body": ...
-
-
-@dataclass(kw_only=True, frozen=True)
-class BodyInit(Body):
-    type: MessageType = MessageType.INIT
-    node_id: str
-    node_ids: list[str]
-
-    @classmethod
-    def from_json(cls, body_json: dict[Any, Any]) -> BodyInit:
-        node_id = body_json.get("node_id")
-        if not isinstance(node_id, str):
-            raise BadMessageError(
-                f"Bad node_id = {type(node_id)} {node_id} body_json = {body_json}"
-            )
-        node_ids = body_json.get("node_ids")
-        if not isinstance(node_ids, list):
-            raise BadMessageError(
-                f"Bad node_ids = {type(node_ids)} {node_ids} body_json = {body_json}"
-            )
-        node_ids = cast(list[str], node_ids)
-        if not all(
-            isinstance(k, str) for k in node_ids
-        ):  # pyright: ignore[reportUnnecessaryIsInstance]
-            raise BadMessageError(f"Wrong node_ids = {node_ids} body_json = {body_json}")
-        return BodyInit(node_id=node_id, node_ids=node_ids)
-
-
-@dataclass(kw_only=True, frozen=True)
-class BodyInitOk(Body):
-    type: MessageType = MessageType.INIT_OK
-
-    @classmethod
-    def from_json(cls, body_json: dict[Any, Any]) -> BodyInitOk:
-        return BodyInitOk()
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -253,6 +200,8 @@ class Message:
         body_type_str = _get_str(body_json, "type")
         msg_id = _get_int_or_none(body_json, "msg_id")
         in_reply_to = _get_int_or_none(body_json, "in_reply_to")
+
+        from messages.body_init import BodyInit, BodyInitOk
 
         body: Body
         match body_type_str:
