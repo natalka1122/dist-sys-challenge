@@ -2,11 +2,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from const import ErrorType, MessageType
-from logging_config import get_logger
 from messages.body import Body
 from messages.func import get_int, get_str
-
-logger = get_logger(__name__)
 
 
 @dataclass(kw_only=True, frozen=True)

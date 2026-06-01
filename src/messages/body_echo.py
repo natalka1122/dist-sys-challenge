@@ -3,10 +3,7 @@ from typing import Any
 
 from const import MessageType
 from exceptions import BadMessageError
-from logging_config import get_logger
 from messages.body import Body
-
-logger = get_logger(__name__)
 
 
 @dataclass(kw_only=True, frozen=True)

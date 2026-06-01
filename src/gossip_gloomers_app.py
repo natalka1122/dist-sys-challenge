@@ -5,22 +5,8 @@ import sys
 from exceptions import BadMessageError
 from ggstate import GGState
 from logging_config import get_logger
-from messages.body_broadcast import (
-    BodyBroadcast,
-    BodyBroadcastOk,
-)
-from messages.body_echo import BodyEcho, BodyEchoOk
-from messages.body_generate import BodyGenerate, BodyGenerateOk
-from messages.body_init import BodyInit, BodyInitOk
-from messages.body_read import (
-    BodyRead,
-    BodyReadOk,
-)
-from messages.body_topology import (
-    BodyTopology,
-    BodyTopologyOk,
-)
 from messages.message import Message
+from processor import processor
 from shutdown import Shutdown
 
 logger = get_logger(__name__)
@@ -82,49 +68,6 @@ async def write_json(
             )
             logger.debug(f"write {next_item}")
     logger.info("Stopped write_json")
-
-
-async def processor(
-    read_queue: asyncio.Queue[Message],
-    write_queue: asyncio.Queue[Message],
-    gg_state: GGState,
-    shutdown: Shutdown,
-) -> None:
-    while not shutdown.task.done():
-        read_task = asyncio.create_task(read_queue.get())
-        await asyncio.wait([shutdown.task, read_task], return_when=asyncio.FIRST_COMPLETED)
-        if read_task.done():
-            read_data = read_task.result()
-            body = read_data.body
-            if isinstance(body, BodyEcho):
-                body = BodyEchoOk(echo=body.echo)
-            elif isinstance(body, BodyInit):
-                if isinstance(gg_state.node_id, str):
-                    logger.error(f"Got init but already have node_id. body = {body}")
-                    shutdown.event.set()
-                    break
-                gg_state.node_id = body.node_id
-                gg_state.node_ids = set(body.node_ids)
-                body = BodyInitOk()
-            elif isinstance(body, BodyTopology):
-                body = BodyTopologyOk()
-            elif isinstance(body, BodyGenerate):
-                body = BodyGenerateOk(id=gg_state.next_generate_id)
-            elif isinstance(body, BodyBroadcast):
-                gg_state.broadcast.add(body.message)
-                body = BodyBroadcastOk()
-            elif isinstance(body, BodyRead):
-                body = BodyReadOk(messages=list(gg_state.broadcast))
-            else:
-                logger.error(f"Got unknown body = {body}")
-                shutdown.event.set()
-                break
-            message = Message(
-                src=read_data.dest, dest=read_data.src, body=body, in_reply_to=read_data.msg_id
-            )
-            await write_queue.put(message)
-            logger.debug(f"processed {read_data} => {message}")
-    logger.info("Stopped processor")
 
 
 async def gossip_gloomers_app(
