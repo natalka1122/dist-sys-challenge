@@ -24,13 +24,16 @@ Each challenge builds a node process that reads JSON messages from **stdin** and
 
 | File | Role |
 |---|---|
-| `src/main.py` | Entry point. Sets up signal handlers (SIGINT/SIGTERM → shutdown_event), configures logging, launches `gossip_gloomers_app`. |
+| `src/main.py` | Entry point. Sets up signal handlers, configures logging, launches `gossip_gloomers_app`. |
 | `src/gossip_gloomers_app.py` | Core loop. Three asyncio tasks: `read_json` (stdin → queue), `processor` (queue → reply), `write_json` (queue → stdout). |
-| `src/message.py` | Message model. Dataclasses for all body types (`EchoBody`, `EchoOkBody`, `InitBody`, `InitOkBody`, `ErrorBody`, `BodyGenerate`, `BodyGenerateOk`) plus `Message` wrapper with JSON serialization. |
+| `src/processor.py` | Handler dispatch. Maps body types to handler functions via `HANDLERS` registry. |
+| `src/handlers/` | Business logic handlers (echo, init, generate, broadcast, read, topology, error). |
+| `src/messages/` | Message models. `messages/body.py` (base `Body` class), `messages/message.py` (wrapper with JSON serialization), plus per-type body modules. |
 | `src/ggstate.py` | Shared node state — `node_id`, `node_ids`, `next_msg_id` counter, `next_generate_id` counter. |
 | `src/const.py` | Enums: `MessageType` and `ErrorType` (Maelstrom error codes). |
 | `src/exceptions.py` | `NeedMoreBytesError` and `BadMessageError`. |
 | `src/logging_config.py` | Logging setup (console to stderr + rotating file handler). |
+| `src/shutdown.py` | `Shutdown` wrapper around `asyncio.Event` for task coordination. |
 
 ### Data flow
 
@@ -70,15 +73,20 @@ maelstrom test -w echo --bin "src/main.py" --node-count 1 --time-limit 10 --rate
 # Maelstrom test (unique-ids challenge)
 maelstrom test -w unique-ids --bin "src/main.py" --time-limit 30 --rate 1000 --node-count 3 --availability total --nemesis partition --log-stderr
 
-# Maelstrom test (single-node broadcast challenge)
+# Single-Node Broadcast challenge (3a)
 maelstrom test -w broadcast --bin "src/main.py" --node-count 1 --time-limit 20 --rate 10 --log-stderr
+
+# Multi-Node Broadcast challenge (3b)
+maelstrom test -w broadcast --bin "src/main.py" --node-count 3 --time-limit 20 --rate 10 --log-stderr
 ```
 
 ## Current status
 
 - ✅ **Challenge #1 — Echo**: Completed and passing.
 - ✅ **Challenge #2 — Unique ID Generation**: Completed and passing. Generates globally unique IDs (`{node_id}_{counter}`).
-- ✅ **Challenge #3a — Single-Node Broadcast**: Completed and passing. Stores messages in `GGState.broadcast`, replies `broadcast_ok` and `read_ok`. 210 operations, 0 lost/duplicated/stale, `:valid? true`.
+- ✅ **Challenge #3a — Single-Node Broadcast**: Completed and passing. Stores messages in `GGState.broadcast`, replies `broadcast_ok` and `read_ok`. 210 ops, 0 lost/duplicated/stale, `:valid? true`.
+- ⏳ **Challenge #3b — Multi-Node Broadcast**: Next up. Need to broadcast to all nodes via `node_ids`.
+- ⏳ **Challenge #3c–3e**: Not started.
 
 **Maelstrom test results**
 
@@ -91,12 +99,17 @@ maelstrom test -w broadcast --bin "src/main.py" --node-count 1 --time-limit 20 -
 | # | Title | Status |
 |---|-------|--------|
 | [1](https://github.com/natalka1122/dist-sys-challenge/issues/1) | Add monotonic msg_id generation | ✅ Closed |
-| [2](https://github.com/natalka1122/dist-sys-challenge/issues/2) | Globally unique ID generation (replace hardcoded id=1) | ✅ Closed |
+| [2](https://github.com/natalka1122/dist-sys-challenge/issues/2) | Globally unique ID generation | ✅ Closed |
 | [3](https://github.com/natalka1122/dist-sys-challenge/issues/3) | Store node_id / node_ids from init message | ✅ Closed |
 | [4](https://github.com/natalka1122/dist-sys-challenge/issues/4) | Add unit and integration tests | Open |
-| [5](https://github.com/natalka1122/dist-sys-challenge/issues/5) | Decouple growing files into smaller modules | Open |
+| [5](https://github.com/natalka1122/dist-sys-challenge/issues/5) | Decouple growing files into smaller modules | ✅ Closed |
 | [6](https://github.com/natalka1122/dist-sys-challenge/issues/6) | Return proper Maelstrom error instead of crashing on unknown types | Open |
-| [7](https://github.com/natalka1122/dist-sys-challenge/issues/7) | Reduce logging verbosity | Open |
+| [7](https://github.com/natalka1122/dist-sys-challenge/issues/7) | Reduce logging verbosity | ✅ Closed |
+| [9](https://github.com/natalka1122/dist-sys-challenge/issues/9) | Implement Challenge #3a: Single-Node Broadcast | ✅ Closed |
+| [10](https://github.com/natalka1122/dist-sys-challenge/issues/10) | Implement Challenge #3b: Multi-Node Broadcast | Open |
+| [11](https://github.com/natalka1122/dist-sys-challenge/issues/11) | Implement Challenge #3d: Efficient Broadcast, Part I | Open |
+| [12](https://github.com/natalka1122/dist-sys-challenge/issues/12) | Implement Challenge #3c: Fault Tolerant Broadcast | Open |
+| [13](https://github.com/natalka1122/dist-sys-challenge/issues/13) | Implement Challenge #3e: Efficient Broadcast, Part II | Open |
 
 ## Challenge breakdown
 
@@ -122,10 +135,9 @@ The challenges are split into sub-challenges (a, b, c, ...):
 ## Known gaps
 
 1. **Unit tests** — no tests yet. Only end-to-end via Maelstrom.
-2. **Handler dispatch** — still uses `if/elif` chain in `processor()`. Will need a registry pattern as more body types are added.
-3. **`src`/`dest` swapping** — processor blindly swaps src/dest instead of using `gg_state.node_id`. Works for single-node echo/generate, needs fixing for multi-node challenges (3b+).
-4. **Fire-and-forget messaging** — 3a introduces `Send()` (no reply expected). Need an async send mechanism alongside RPC.
-5. **Message routing** — currently only replies. 3a+ needs ability to send to specific nodes via `node_ids`.
+2. **`src`/`dest` swapping** — processor blindly swaps `src`/`dest` instead of using `gg_state.node_id`. Works for single-node echo/generate, needs fixing for multi-node challenges (3b+).
+3. **Fire-and-forget messaging** — 3a+ needs ability to send messages without expecting a reply (gossip to neighbors).
+4. **Message routing** — currently only replies. 3b+ needs ability to send to specific nodes via `node_ids`.
 
 ## Tech
 

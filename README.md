@@ -48,8 +48,11 @@ The test harness sends JSON messages to the node's stdin, and the node replies o
 │   ├── __init__.py         # Package marker
 │   ├── main.py             # Entry point — signal handling, asyncio runner
 │   ├── gossip_gloomers_app.py    # Core loop: stdin reader, processor, stdout writer
+│   ├── processor.py        # Handler dispatch — maps body types → handler functions
+│   ├── handlers/           # Business logic handlers (one per message type)
 │   ├── ggstate.py          # Shared node state (node_id, counters, generation)
-│   ├── message.py          # Message model (JSON deserialization)
+│   ├── shutdown.py         # Shutdown event wrapper
+│   ├── messages/           # Message models (body types + serialization)
 │   ├── const.py            # Message type enum
 │   ├── exceptions.py       # Custom exceptions
 │   └── logging_config.py   # Logging setup (console + rotating file)
@@ -112,6 +115,15 @@ maelstrom test \
   -w broadcast \
   --bin "src/main.py" \
   --node-count 1 \
+  --time-limit 20 \
+  --rate 10 \
+  --log-stderr
+
+# Multi-Node Broadcast challenge (3b)
+maelstrom test \
+  -w broadcast \
+  --bin "src/main.py" \
+  --node-count 3 \
   --time-limit 20 \
   --rate 10 \
   --log-stderr
