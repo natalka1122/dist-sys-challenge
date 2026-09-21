@@ -13,5 +13,5 @@ def process_broadcast(body: Body, gg_state: GGState, shutdown_event: Event) -> B
         logger.error(f"Got body = {type(body)} {body}")
         shutdown_event.set()
         return None
-    gg_state.broadcast.add(body.message)
+    gg_state.add_broadcast_msg(body.message)
     return BodyBroadcastOk()

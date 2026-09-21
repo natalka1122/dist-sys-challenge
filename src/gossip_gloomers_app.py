@@ -70,13 +70,13 @@ async def write_json(
     logger.info("Stopped write_json")
 
 
-async def gossip_gloomers_app(
+async def gossip_gloomers_app(  # noqa: WPS210
     shutdown_event: asyncio.Event,
 ) -> None:
-    gg_state = GGState()
     reader, writer = await connect_stdin_stdout()
     read_queue: asyncio.Queue[Message] = asyncio.Queue()
     write_queue: asyncio.Queue[Message] = asyncio.Queue()
+    gg_state = GGState()
     shutdown = Shutdown(shutdown_event)
     tasks: list[asyncio.Task[None]] = [
         asyncio.create_task(

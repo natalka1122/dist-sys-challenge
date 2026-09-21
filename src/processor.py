@@ -9,6 +9,7 @@ from handlers.error import process_error
 from handlers.generate import process_generate
 from handlers.init import process_init
 from handlers.read import process_read
+from handlers.send import process_send
 from handlers.topology import process_topology
 from logging_config import get_logger
 from messages.body import Body
@@ -18,6 +19,7 @@ from messages.body_error import BodyError
 from messages.body_generate import BodyGenerate
 from messages.body_init import BodyInit
 from messages.body_read import BodyRead
+from messages.body_send import BodySend
 from messages.body_topology import BodyTopology
 from messages.message import Message
 from shutdown import Shutdown
@@ -39,12 +41,13 @@ HANDLERS: Mapping[type[Body], ArgsHandler] = MappingProxyType(
         BodyGenerate: process_generate,
         BodyInit: process_init,
         BodyRead: process_read,
+        BodySend: process_send,
         BodyTopology: process_topology,
     }
 )
 
 
-async def processor(
+async def processor(  # noqa: WPS210
     read_queue: asyncio.Queue[Message],
     write_queue: asyncio.Queue[Message],
     gg_state: GGState,
@@ -58,7 +61,9 @@ async def processor(
             body = read_data.body
             handler = HANDLERS.get(type(body))
             if handler is None:
-                continue
+                logger.error(f"There is no handler for body = {body}")
+                shutdown.event.set()
+                break
 
             response_body = handler(body=body, gg_state=gg_state, shutdown_event=shutdown.event)
             if response_body is not None:

@@ -18,6 +18,8 @@ class MessageType(StrEnum):
     TOPOLOGY_OK = "topology_ok"
     READ = "read"
     READ_OK = "read_ok"
+    SEND = "send"
+    SEND_OK = "send_ok"
 
 
 class ErrorType(IntEnum):
