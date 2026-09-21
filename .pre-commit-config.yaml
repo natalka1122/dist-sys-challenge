@@ -41,7 +41,8 @@ repos:
       # define (or violate) the layering. Needs src/ on PYTHONPATH as CI runs it.
       - id: import-linter
         name: import-linter (architecture gate)
-        entry: env PYTHONPATH=src lint-imports
+        # --cache-dir keeps .import_linter_cache out of the repo tree
+        entry: env PYTHONPATH=src lint-imports --cache-dir /tmp/dist-sys-challenge-import-linter-cache
         language: system
         pass_filenames: false
         types: [python]

@@ -3,13 +3,14 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.egg-info/
-.coverage
-.coverage.*
+
+# Coverage output
 htmlcov/
 
 dist/
 build/
 *.egg
+.pytest_cache/
 
 # Virtual environments
 .venv/
@@ -18,12 +19,6 @@ venv/
 
 # Logs
 logs/
-
-# Mypy cache
-.mypy_cache/
-
-# Import-linter cache
-.import_linter_cache/
 
 # IDE / editors
 .idea/

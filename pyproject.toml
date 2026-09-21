@@ -30,7 +30,8 @@ strict = true
 check_untyped_defs = true
 follow_untyped_imports = true
 mypy_path = ["src"]
-exclude = [".mypy_cache/"]
+# Build caches live in /tmp so they never pollute the repo tree.
+cache_dir = "/tmp/dist-sys-challenge-mypy-cache"
 
 [tool.importlinter]
 root_packages = ["handlers", "messages"]
@@ -47,10 +48,16 @@ type = "forbidden"
 source_modules = ["handlers"]
 forbidden_modules = ["handlers"]
 
+[tool.coverage.run]
+# Externalized so it never spoils the repo tree.
+data_file = "/tmp/dist-sys-challenge.coverage"
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["src"]
+# Keep .pytest_cache out of the repo tree.
+cache_dir = "/tmp/dist-sys-challenge-pytest-cache"
 [dependency-groups]
 lint = [
   "black",
