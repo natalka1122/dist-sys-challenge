@@ -40,7 +40,7 @@ The test harness sends JSON messages to the node's stdin, and the node replies o
 - **Type checking:** mypy (`--strict`)
 - **Linting:** flake8 + wemake-python-styleguide; formatting: black
 - **Pre-commit:** the CI lint gate (black, flake8, mypy, import-linter) runs automatically on every commit
-- **Dev container:** Ubuntu 24.04 with Maelstrom v0.2.4 pre-installed
+- **Dev container:** Ubuntu 26.04 with Maelstrom v0.2.4 pre-installed
 
 ## Project structure
 

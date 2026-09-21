@@ -1,33 +1,28 @@
-FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
+FROM mcr.microsoft.com/devcontainers/base:ubuntu26.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-# Install packages
+# Install packages. Ubuntu 26.04 (Resolute) ships Python 3.14 as the default
+# `python3` (python3.14 3.14.4 in main), so no deadsnakes PPA is needed.
 RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    add-apt-repository ppa:deadsnakes/ppa && \
-    apt update && \
-    apt install -y python3.14 python3-pip python3-venv git gh openjdk-17-jdk fd-find ripgrep && \
+    apt-get install -y python3 python3-pip python3-venv git gh openjdk-17-jdk fd-find ripgrep && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Make Python 3.14 default (--set: deterministic, no auto-mode tie with 3.12).
 # `python` alias = plain symlink to python3 — no python-is-python3 package, so
-# no alternatives re-registration can ever flip the default back to 3.12.
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.14 1 && \
-    update-alternatives --set python3 /usr/bin/python3.14 && \
-    ln -sf /usr/bin/python3 /usr/bin/python
+# no alternatives re-registration can ever flip the default away from 3.14.
+RUN ln -sf /usr/bin/python3 /usr/bin/python
 
-# Fresh pip: distro pip 24.0 is deb-managed (no RECORD file) and refuses normal
+# Fresh pip: distro pip is deb-managed (no RECORD file) and refuses normal
 # `--upgrade` uninstall. `--ignore-installed` skips the uninstall step; the new
 # pip lands first on sys.path (/usr/local/lib/python3.14/dist-packages) and wins.
-RUN python3.14 -m pip install --ignore-installed --break-system-packages pip
+RUN python3 -m pip install --ignore-installed --break-system-packages pip
 
 # Python tooling: repo shared tooling comes from PEP 735 [dependency-groups]
 # in pyproject.toml (single source of truth — matches CI's `--group dev`;
 # import-linter + vulture land here automatically).
 COPY pyproject.toml /tmp/pyproject.toml
 RUN cd /tmp && \
-    python3.14 -m pip install --break-system-packages --group dev && \
+    python3 -m pip install --break-system-packages --group dev && \
     rm /tmp/pyproject.toml
 
 # Install maelstrom
