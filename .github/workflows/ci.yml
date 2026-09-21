@@ -13,10 +13,10 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: deadsnakes/action@v3.2.0
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -48,10 +48,10 @@ jobs:
   maelstrom-echo:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: deadsnakes/action@v3.2.0
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -61,7 +61,7 @@ jobs:
           pip install --group test
 
       - name: Set up Java 17 (for Maelstrom)
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: "17"
           distribution: "temurin"
@@ -93,10 +93,10 @@ jobs:
   maelstrom-uniqueids:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: deadsnakes/action@v3.2.0
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -106,7 +106,7 @@ jobs:
           pip install --group test
 
       - name: Set up Java 17 (for Maelstrom)
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: "17"
           distribution: "temurin"
@@ -140,10 +140,10 @@ jobs:
   maelstrom-broadcast:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: deadsnakes/action@v3.2.0
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -153,7 +153,7 @@ jobs:
           pip install --group test
 
       - name: Set up Java 17 (for Maelstrom)
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: "17"
           distribution: "temurin"
