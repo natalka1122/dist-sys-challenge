@@ -1,20 +1,10 @@
 [flake8]
-max-line-length = 120
-; extend-select = I
-; exclude = .git,__pycache__,.venv,tmp,app/tests
-exclude = .git,__pycache__,.venv,tmp,notebooks/sniff.py,play*.py,notebooks/*,play/*
-# Base flake8 configuration:
-# https://flake8.pycqa.org/en/latest/user/configuration.html
-format = wemake
+max-line-length = 100
 show-source = true
-statistics = false
+; statistics = false
 doctests = true
-
-# Self settings:
-; max-imports = 17
-; ignore=WPS2
-; ignore=WPS1
-; ignore=WPS1,WPS2
-; ignore=WPS1,WPS2,WPS3
-; ignore=WPS1,WPS2,WPS3,WPS4
-extend-ignore=W503,E203,H601,WPS432,WPS339,WPS111,WPS110,WPS111,WPS402,WPS201,WPS203
+format = wemake
+exclude = .git,__pycache__,.venv,tmp,notebooks/sniff.py,play*.py,notebooks/*,play/*
+; E203/W503: black-compatible line-break/whitespace rules (conflict with formatter)
+; WPS...: deliberately relaxed strictness — curated per-project
+extend-ignore = W503,E203,H601,WPS432,WPS339,WPS111,WPS110,WPS402,WPS201,WPS203

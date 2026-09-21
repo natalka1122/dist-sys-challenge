@@ -1,0 +1,36 @@
+# Git
+.git
+
+# Python
+__pycache__
+*.py[cod]
+*.egg-info
+.mypy_cache
+.pytest_cache
+.coverage
+htmlcov
+.venv
+venv
+dist
+build
+
+# Node
+node_modules
+
+# Challenge run outputs (bind-mounted, not build-time)
+store
+results
+
+# Pi agent local state (credentials, sessions) — mounted at runtime, not needed in image
+.pi
+
+# Editor / OS
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+
+# Env
+.env
+.env.local

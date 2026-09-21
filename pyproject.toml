@@ -32,11 +32,39 @@ follow_untyped_imports = true
 mypy_path = ["src"]
 exclude = [".mypy_cache/"]
 
-[tool.ruff]
-line-length = 100
-target-version = "py314"
+[tool.importlinter]
+root_packages = ["handlers", "messages"]
+include_external_packages = false
+
+[[tool.importlinter.contracts]]
+name = "Layer boundaries: handlers above messages"
+type = "layers"
+layers = ["handlers", "messages"]
+
+[[tool.importlinter.contracts]]
+name = "Handlers are independent of each other"
+type = "forbidden"
+source_modules = ["handlers"]
+forbidden_modules = ["handlers"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["src"]
+[dependency-groups]
+lint = [
+  "black",
+  "cohesion",
+  "dlint",
+  "flake8",
+  "import-linter",
+  "mypy",
+  "vulture",
+  "wemake-python-styleguide",
+]
+test = ["pytest", "pytest-asyncio", "pytest-cov"]
+dev = [
+  {"include-group" = "lint"},
+  {"include-group" = "test"},
+  "pre-commit",
+]

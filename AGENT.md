@@ -51,6 +51,7 @@ Each challenge builds a node process that reads JSON messages from **stdin** and
 ## Key conventions
 
 - **Strict typing**: mypy `--strict` enforced via `pyproject.toml`. All functions have type annotations.
+- **Lint stack**: black (format) + flake8 wemake-styleguide + dlint (security) run in CI. `import-linter` hard-gates architecture (layers: handlers → messages, handlers must stay independent); `cohesion` + `vulture` run as report-only (never fail build). Run `PYTHONPATH=src lint-imports` locally. **Pre-commit** (`.pre-commit-config.yaml`, all `language: system` hooks) re-runs the exact CI lint gate on every commit — tools come from the same `pyproject.toml` dev group CI installs, so they never drift. Hooks are installed by `.devcontainer/post_start_command.sh` on every container start.
 - **No external deps**: The project has zero runtime dependencies. `pydantic` was removed — all serialization uses `json` + dataclasses.
 - **`msg_id` is assigned at write time**: `write_json` assigns a monotonic `msg_id` from `GGState.next_msg_id` before serialization. The Maelstrom spec marks `msg_id` as optional, but outgoing messages carry it.
 - **`src`/`dest` swapped on reply**: Currently the processor swaps `src` and `dest` when replying. This works for echo (client↔node) but will need `node_id` awareness for multi-node challenges.
@@ -142,5 +143,5 @@ The challenges are split into sub-challenges (a, b, c, ...):
 ## Tech
 
 - Python 3.14, asyncio
-- mypy `--strict`, ruff (wemake-python-styleguide)
+- mypy `--strict`, flake8 + wemake-python-styleguide
 - Maelstrom v0.2.4 (in dev container)

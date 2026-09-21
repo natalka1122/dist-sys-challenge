@@ -1,62 +1,41 @@
 #!/usr/bin/env bash
 set -e
 
-git config --global user.email "${GIT_AUTHOR_EMAIL:?set GIT_AUTHOR_EMAIL in local env}"
-git config --global user.name "${GIT_AUTHOR_NAME:?set GIT_AUTHOR_NAME in local env}"
+if [ -z "${GIT_AUTHOR_EMAIL:-}" ] || [ -z "${GIT_AUTHOR_NAME:-}" ]; then
+    echo "WARN: GIT_AUTHOR_EMAIL/GIT_AUTHOR_NAME unset; skipping git identity setup" >&2
+else
+    git config --global user.email "${GIT_AUTHOR_EMAIL}"
+    git config --global user.name "${GIT_AUTHOR_NAME}"
+fi
 
-# Fix SSH permissions
+# Fix SSH permissions (credential mount)
 sudo chown -R vscode:vscode ~/.ssh || true
-chmod 700 ~/.ssh || true
-chmod 600 ~/.ssh/* || true
+chmod 700 ~/.ssh 2>/dev/null || true
+chmod 600 ~/.ssh/id_* ~/.ssh/*_ed25519 2>/dev/null || true
+chmod 644 ~/.ssh/known_hosts ~/.ssh/config 2>/dev/null || true
 
 # Fix gh permissions (credential mount)
 sudo chown -R vscode:vscode ~/.config/gh 2>/dev/null || true
 
-# -----------------------------------------------------------
-# Install Matt Pocock's skills (latest, plugin-filtered)
-# -----------------------------------------------------------
-SKILLS_REPO="$HOME/.pi/agent/skills/mattpocock-skills-repo"
-SKILLS_DEST="$HOME/.pi/agent/skills"
-
-mkdir -p "$SKILLS_DEST"
-
-if [ -d "$SKILLS_REPO/.git" ]; then
-    echo "Updating mattpocock/skills..."
-    cd "$SKILLS_REPO" && git pull --ff-only
-else
-    echo "Cloning mattpocock/skills..."
-    git clone --depth 1 https://github.com/mattpocock/skills.git "$SKILLS_REPO"
+# Install/update pi packages before pi first runs: session start is fast, and
+# packages are current. `--extensions` updates declared packages + reconciles
+# git refs; pinned specs skipped, pi binary untouched, missing ones installed.
+if command -v pi >/dev/null 2>&1; then
+    if ! UPDATE_OUT=$(GIT_TERMINAL_PROMPT=0 pi update --extensions 2>&1); then
+        echo "WARN: pi update --extensions failed:" >&2
+        echo "${UPDATE_OUT}" >&2
+    fi
 fi
 
-# Symlink only the skills listed in .claude-plugin/plugin.json
-python3 << 'PYEOF'
-import json
-import os
-import shutil
-
-repo = os.path.expanduser("~/.pi/agent/skills/mattpocock-skills-repo")
-plugin_path = os.path.join(repo, ".claude-plugin", "plugin.json")
-dest_dir = os.path.expanduser("~/.pi/agent/skills")
-
-with open(plugin_path) as f:
-    plugin = json.load(f)
-
-for rel_path in plugin.get("skills", []):
-    rel = rel_path.removeprefix("./")
-    src = os.path.join(repo, rel)
-    name = os.path.basename(src)
-    dest = os.path.join(dest_dir, name)
-
-    if os.path.islink(dest):
-        os.remove(dest)
-    elif os.path.exists(dest):
-        if os.path.isdir(dest):
-            shutil.rmtree(dest)
-        else:
-            os.remove(dest)
-
-    os.symlink(src, dest)
-    print(f"Linked skill: {name}")
-PYEOF
-
-echo "Matt Pocock skills installed."
+# Install pre-commit git hooks (config + versioned in repo). Idempotent: re-runs
+# on every container start, so hooks survive re-clones/rebase and re-install
+# after .git/hooks is wiped. All hooks are `language: system` (tools already on
+# PATH via the pyproject dev group), so no environment build is needed.
+if command -v pre-commit >/dev/null 2>&1; then
+    if ! PRE_COMMIT_OUT=$(pre-commit install 2>&1); then
+        echo "WARN: pre-commit install failed:" >&2
+        echo "${PRE_COMMIT_OUT}" >&2
+    fi
+else
+    echo "WARN: pre-commit not found; skipping hook install (image predates the pyproject dev-group change; rebuild the container)" >&2
+fi

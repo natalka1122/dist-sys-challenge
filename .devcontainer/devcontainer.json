@@ -1,18 +1,23 @@
 {
     "build": {
-        "dockerfile": "Dockerfile"
+        "dockerfile": "Dockerfile",
+        "context": "..",
+        "args": {
+            "PI_VERSION": "v0.86.1"
+        }
     },
+    "initializeCommand": "bash .devcontainer/initialize_command.sh",
     "mounts": [
         "source=${localEnv:GITHUB_SSH_DIR},target=/home/vscode/.ssh,type=bind,consistency=cached",
-        "source=${localEnv:HOME}/.config/gh_dist_sys_challenge,target=/home/vscode/.config/gh,type=bind,consistency=cached",
-        "source=${localWorkspaceFolder}/.pi/agent,target=/home/vscode/.pi/agent,type=bind,consistency=cached"
+        "source=${localWorkspaceFolder}/.config/gh,target=/home/vscode/.config/gh,type=bind,consistency=cached",
+        "source=${localWorkspaceFolder}/.pi/agent/sessions,target=/home/vscode/.pi/agent/sessions,type=bind,consistency=cached",
+        "source=${localWorkspaceFolder}/.pi/agent/auth.json,target=/home/vscode/.pi/agent/auth.json,type=bind,consistency=cached",
+        "source=${localWorkspaceFolder}/.pi/agent/settings.json,target=/home/vscode/.pi/agent/settings.json,type=bind,consistency=cached"
     ],
-    "remoteEnv": {
+    "containerEnv": {
         "TZ": "Europe/Budapest",
-        "GEMINI_API_KEY": "${localEnv:MY_OPENROUTER_API_KEY}",
         "GIT_AUTHOR_EMAIL": "${localEnv:GIT_AUTHOR_EMAIL}",
-        "GIT_AUTHOR_NAME": "${localEnv:GIT_AUTHOR_NAME}",
-        "OPENROUTER_API_KEY": "${localEnv:MY_OPENROUTER_API_KEY}"
+        "GIT_AUTHOR_NAME": "${localEnv:GIT_AUTHOR_NAME}"
     },
     "postStartCommand": "bash .devcontainer/post_start_command.sh",
     "forwardPorts": [
@@ -21,7 +26,7 @@
     "portsAttributes": {
         "8080": {
             "label": "Maelstrom",
-            "onAutoForward": "openBrowser"
+            "onAutoForward": "openBrowserOnce"
         }
     },
     "customizations": {
@@ -29,11 +34,11 @@
             "extensions": [
                 "ms-python.python",
                 "ms-python.black-formatter",
-                "charliermarsh.ruff",
+                "ms-python.flake8",
                 "ryu1kn.partial-diff",
                 "ms-python.mypy-type-checker",
-                "ms-python.flake8",
-                "GitHub.vscode-github-actions"
+                "GitHub.vscode-github-actions",
+                "johnny-zhao.pi-agent-studio"
             ],
             "settings": {
                 "[python]": {
@@ -41,17 +46,15 @@
                 },
                 "remote.localPortHost": "allInterfaces",
                 "remote.autoForwardPorts": false,
-                "mypy-type-checker.args": [
-                    "--check-untyped-defs",
-                    "--strict",
-                    "--follow-untyped-imports"
-                ],
                 "mypy-type-checker.executable": "/usr/local/bin/mypy",
                 "python.analysis.diagnosticSeverityOverrides": {
                     "reportUnusedImport": "warning",
                     "reportUnusedVariable": "warning"
                 },
-                "python.analysis.typeCheckingMode": "strict"
+                "python.analysis.typeCheckingMode": "strict",
+                "pi-agent-studio.disabledTools": [
+                    "subagent"
+                ]
             }
         }
     }

@@ -38,7 +38,8 @@ The test harness sends JSON messages to the node's stdin, and the node replies o
 - **Language:** Python 3.14
 - **Async runtime:** `asyncio` (stdin/stdout streams)
 - **Type checking:** mypy (`--strict`)
-- **Linting:** flake8 + wemake-python-styleguide
+- **Linting:** flake8 + wemake-python-styleguide; formatting: black
+- **Pre-commit:** the CI lint gate (black, flake8, mypy, import-linter) runs automatically on every commit
 - **Dev container:** Ubuntu 24.04 with Maelstrom v0.2.4 pre-installed
 
 ## Project structure
@@ -57,8 +58,8 @@ The test harness sends JSON messages to the node's stdin, and the node replies o
 │   ├── exceptions.py       # Custom exceptions
 │   └── logging_config.py   # Logging setup (console + rotating file)
 ├── .devcontainer/          # Dev container config + Maelstrom install
-├── pyproject.toml          # Python project metadata
-├── .flake8                 # Flake8 configuration
+├── pyproject.toml          # Python project metadata (black/flake8/mypy/pytest config)
+├── .flake8                 # Flake8 + wemake-python-styleguide config
 ├── .gitignore
 └── README.md
 ```
@@ -130,6 +131,15 @@ maelstrom test \
 ```
 
 > ⚠️ Tests require Maelstrom (included in the dev container). For manual install see [maelstrom/releases](https://github.com/jepsen-io/maelstrom/releases).
+
+### Pre-commit
+
+Lint gates (black, flake8, mypy, import-linter — the same commands as CI) run on every commit via [pre-commit](https://pre-commit.com/). Hooks are installed automatically by the dev container (`post_start_command.sh`); elsewhere:
+
+```bash
+pre-commit install            # install the git hooks once
+pre-commit run --all-files    # run all hooks over the whole repo
+```
 
 ## Dev container setup
 

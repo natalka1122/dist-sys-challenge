@@ -23,16 +23,26 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
-          pip install mypy pytest pytest-asyncio black wemake-python-styleguide ruff
+          # Dev tools come from PEP 735 [dependency-groups] in pyproject.toml.
+          pip install --group dev
 
-      - name: Check formatting (black)
-        run: black --check --diff src/
+      - name: Lint gate (pre-commit)
+        # Single source of truth: same hooks as local dev (`.pre-commit-config.yaml`),
+        # all `language: system` (black/flake8/mypy/import-linter), tools installed
+        # above via `--group dev`. `--all-files` = whole repo, no staged-only bias.
+        run: pre-commit run --all-files --show-diff-on-failure
 
-      - name: Lint (ruff)
-        run: ruff check src/
+      - name: Audit report (cohesion, vulture)
+        # Report-only on purpose: informational signals, never fail the build.
+        # vulture --ignore-names cls silences false positives on classmethod params.
+        run: |
+          cohesion -d src || true
+          vulture src/ --min-confidence 70 --ignore-names cls || true
 
-      - name: Type check (mypy)
-        run: mypy src/ --explicit-package-bases
+      - name: Tests + coverage report
+        # Tests are a hard gate; the coverage table is informational only
+        # (no --cov-fail-under, so uncovered lines never fail the build).
+        run: python3 -m pytest tests/ --cov=src --cov-report=term-missing
 
 
   maelstrom-echo:
@@ -48,7 +58,7 @@ jobs:
       - name: Install Python packages
         run: |
           python3 -m pip install --upgrade pip
-          pip install mypy pytest pytest-asyncio black
+          pip install --group test
 
       - name: Set up Java 17 (for Maelstrom)
         uses: actions/setup-java@v5
@@ -93,7 +103,7 @@ jobs:
       - name: Install Python packages
         run: |
           python3 -m pip install --upgrade pip
-          pip install mypy pytest pytest-asyncio black
+          pip install --group test
 
       - name: Set up Java 17 (for Maelstrom)
         uses: actions/setup-java@v5
@@ -140,7 +150,7 @@ jobs:
       - name: Install Python packages
         run: |
           python3 -m pip install --upgrade pip
-          pip install mypy pytest pytest-asyncio black
+          pip install --group test
 
       - name: Set up Java 17 (for Maelstrom)
         uses: actions/setup-java@v5
