@@ -10,7 +10,7 @@ Each challenge builds a node process that reads JSON messages from **stdin** and
 
 ## Architecture
 
-```
+```text
 ┌─────────────┐    stdin    ┌──────────────────────┐
 │  Maelstrom  │ ──────────▶ │  python3 src/main.py  │
 │  (test       │            │                       │
@@ -23,7 +23,7 @@ Each challenge builds a node process that reads JSON messages from **stdin** and
 ### Source layout
 
 | File | Role |
-|---|---|
+| --- | --- |
 | `src/main.py` | Entry point. Sets up signal handlers, configures logging, launches `gossip_gloomers_app`. |
 | `src/gossip_gloomers_app.py` | Core loop. Three asyncio tasks: `read_json` (stdin → queue), `processor` (queue → reply), `write_json` (queue → stdout). |
 | `src/processor.py` | Handler dispatch. Maps body types to handler functions via `HANDLERS` registry. |
@@ -81,6 +81,15 @@ maelstrom test -w broadcast --bin "src/main.py" --node-count 1 --time-limit 20 -
 maelstrom test -w broadcast --bin "src/main.py" --node-count 3 --time-limit 20 --rate 10 --log-stderr
 ```
 
+## Dev container notes
+
+- **`python3` / `pip` may resolve to the pi-lens `pip-tools` venv inside agent sessions.** pi-lens prepends `~/.pi-lens/pip-tools/bin` to `PATH` for the pi process, so `python3` runs from that venv (`sys.prefix` = the venv) and `python3 -m pytest` fails with `No module named pytest`. Normal VS Code terminals are **not** affected.
+  - Run tools as **console scripts** (`pytest`, `black`, `flake8`, `mypy`, `pre-commit`, `PYTHONPATH=src lint-imports`) — their shebangs use `/usr/bin/python3`.
+  - Avoid `python3 -m <tool>` and bare `pip install` in-session (they target the venv). Use `/usr/bin/python3 -m ...` when you need the interpreter explicitly.
+  - `python3 src/main.py` is fine either way: the project has zero runtime deps and both interpreters are CPython 3.14.
+- `maelstrom test` writes results/plots under `store/` (gitignored). `gnuplot` is baked into the image; a `cannot render plot` error means the image is stale — rebuild the dev container.
+- `.devcontainer/pi-settings.json` is canonical: `.devcontainer/initialize_command.sh` overwrites `~/.pi/agent/settings.json` (bind-mounted to `.pi/agent/settings.json`) on every container start, so runtime edits there do not persist.
+
 ## Current status
 
 - ✅ **Challenge #1 — Echo**: Completed and passing.
@@ -89,7 +98,7 @@ maelstrom test -w broadcast --bin "src/main.py" --node-count 3 --time-limit 20 -
 - ⏳ **Challenge #3b — Multi-Node Broadcast**: Next up. Need to broadcast to all nodes via `node_ids`.
 - ⏳ **Challenge #3c–3e**: Not started.
 
-**Maelstrom test results**
+### Maelstrom test results
 
 - **Echo** (2026-05-27): passing.
 - **unique-ids** (2026-05-27): 14,544 operations, 0 duplicates, `:valid? true`.
@@ -98,7 +107,7 @@ maelstrom test -w broadcast --bin "src/main.py" --node-count 3 --time-limit 20 -
 ## Issues
 
 | # | Title | Status |
-|---|-------|--------|
+| --- | --- | --- |
 | [1](https://github.com/natalka1122/dist-sys-challenge/issues/1) | Add monotonic msg_id generation | ✅ Closed |
 | [2](https://github.com/natalka1122/dist-sys-challenge/issues/2) | Globally unique ID generation | ✅ Closed |
 | [3](https://github.com/natalka1122/dist-sys-challenge/issues/3) | Store node_id / node_ids from init message | ✅ Closed |
@@ -117,9 +126,9 @@ maelstrom test -w broadcast --bin "src/main.py" --node-count 3 --time-limit 20 -
 The challenges are split into sub-challenges (a, b, c, ...):
 
 | # | Name | URL | Status |
-|---|------|-----|--------|
-| 1 | Echo | [/dist-sys/1](https://fly.io/dist-sys/1/) |
-| 2 | Unique ID Generation | [/dist-sys/2](https://fly.io/dist-sys/2/) |
+| --- | --- | --- | --- |
+| 1 | Echo | [/dist-sys/1](https://fly.io/dist-sys/1/) | ✅ Done |
+| 2 | Unique ID Generation | [/dist-sys/2](https://fly.io/dist-sys/2/) | ✅ Done |
 | 3a | Single-Node Broadcast | [/dist-sys/3a](https://fly.io/dist-sys/3a/) | ✅ Done |
 | 3b | Multi-Node Broadcast | [/dist-sys/3b](https://fly.io/dist-sys/3b/) | ⏳ Not started |
 | 3c | Fault Tolerant Broadcast | [/dist-sys/3c](https://fly.io/dist-sys/3c/) | ⏳ Not started |

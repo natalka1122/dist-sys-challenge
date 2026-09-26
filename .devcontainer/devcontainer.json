@@ -3,7 +3,7 @@
         "dockerfile": "Dockerfile",
         "context": "..",
         "args": {
-            "PI_VERSION": "v0.86.1"
+            "PI_VERSION": "v0.87.1"
         }
     },
     "initializeCommand": "bash .devcontainer/initialize_command.sh",
@@ -37,7 +37,6 @@
                 "ms-python.flake8",
                 "ryu1kn.partial-diff",
                 "ms-python.mypy-type-checker",
-                "GitHub.vscode-github-actions",
                 "johnny-zhao.pi-agent-studio"
             ],
             "settings": {
@@ -46,15 +45,22 @@
                 },
                 "remote.localPortHost": "allInterfaces",
                 "remote.autoForwardPorts": false,
+                "mypy-type-checker.args": [
+                    "--check-untyped-defs",
+                    "--strict",
+                    "--follow-untyped-imports"
+                ],
                 "mypy-type-checker.executable": "/usr/local/bin/mypy",
                 "python.analysis.diagnosticSeverityOverrides": {
                     "reportUnusedImport": "warning",
                     "reportUnusedVariable": "warning"
                 },
                 "python.analysis.typeCheckingMode": "strict",
+                "python.analysis.languageServerMode": "full",
                 "pi-agent-studio.disabledTools": [
                     "subagent"
-                ]
+                ],
+                "pi-agent-studio.ui": "webview"
             }
         }
     }

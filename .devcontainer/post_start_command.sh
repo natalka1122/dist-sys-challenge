@@ -17,9 +17,10 @@ chmod 644 ~/.ssh/known_hosts ~/.ssh/config 2>/dev/null || true
 # Fix gh permissions (credential mount)
 sudo chown -R vscode:vscode ~/.config/gh 2>/dev/null || true
 
-# Install/update pi packages before pi first runs: session start is fast, and
-# packages are current. `--extensions` updates declared packages + reconciles
-# git refs; pinned specs skipped, pi binary untouched, missing ones installed.
+# Fix PI permissions
+sudo chown -R vscode:vscode ~/.pi 2>/dev/null || true
+
+# Refresh declared pi packages only
 if command -v pi >/dev/null 2>&1; then
     if ! UPDATE_OUT=$(GIT_TERMINAL_PROMPT=0 pi update --extensions 2>&1); then
         echo "WARN: pi update --extensions failed:" >&2
@@ -27,15 +28,12 @@ if command -v pi >/dev/null 2>&1; then
     fi
 fi
 
-# Install pre-commit git hooks (config + versioned in repo). Idempotent: re-runs
-# on every container start, so hooks survive re-clones/rebase and re-install
-# after .git/hooks is wiped. All hooks are `language: system` (tools already on
-# PATH via the pyproject dev group), so no environment build is needed.
+# Install pre-commit git hooks (config + versioned in repo)
 if command -v pre-commit >/dev/null 2>&1; then
     if ! PRE_COMMIT_OUT=$(pre-commit install 2>&1); then
         echo "WARN: pre-commit install failed:" >&2
         echo "${PRE_COMMIT_OUT}" >&2
     fi
 else
-    echo "WARN: pre-commit not found; skipping hook install (image predates the pyproject dev-group change; rebuild the container)" >&2
+    echo "WARN: pre-commit not found; skipping hook install" >&2
 fi

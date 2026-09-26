@@ -1,13 +1,13 @@
 [build-system]
 requires = ["setuptools>=64.0"]
-build-backend = "setuptools.backends._legacy:_Backend"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "dist-sys-challenge"
 version = "0.1.0"
 description = "Solution to the Fly.io Distributed Systems Challenge (Maelstrom)"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 license = {text = "MIT"}
 authors = [
   {name = "natalka1122"},

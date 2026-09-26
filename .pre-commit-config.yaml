@@ -1,15 +1,12 @@
 # Single source of truth for the lint gate: CI runs `pre-commit run --all-files`
-# (see .github/workflows/ci.yml), so local commits and CI can never drift.
-# Tools come from the PEP 735 [dependency-groups.dev] group in pyproject.toml —
-# the same source both the dev container and CI install with `pip install
-# --group dev`.
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
-      # Generic text fixers (auto-fix + fail so you re-stage, standard contract).
       - id: trailing-whitespace
       - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
 
   - repo: local
     hooks:
@@ -27,7 +24,6 @@ repos:
         types: [python]
         files: ^(src|tests)/
 
-      # Whole-project analysis (strict mypy needs the full import graph, like CI).
       - id: mypy
         name: mypy (strict)
         entry: mypy src/ tests/ --explicit-package-bases
@@ -36,13 +32,12 @@ repos:
         types: [python]
         files: ^(src|tests)/
 
-      # Architecture gate: layers handlers → messages, handlers stay independent.
-      # Src-only by design: tests sit outside the root packages, so they don't
-      # define (or violate) the layering. Needs src/ on PYTHONPATH as CI runs it.
       - id: import-linter
         name: import-linter (architecture gate)
         # --cache-dir keeps .import_linter_cache out of the repo tree
-        entry: env PYTHONPATH=src lint-imports --cache-dir /tmp/dist-sys-challenge-import-linter-cache
+        entry: >-
+          env PYTHONPATH=src lint-imports
+          --cache-dir /tmp/dist-sys-challenge-import-linter-cache
         language: system
         pass_filenames: false
         types: [python]
